@@ -165,8 +165,11 @@ impl fmt::Debug for ShroudedBytes {
 
 impl PartialEq for ShroudedBytes {
     fn eq(&self, other: &Self) -> bool {
-        // Constant-time comparison would be better for cryptographic use
-        self.expose() == other.expose()
+        use subtle::ConstantTimeEq;
+        if self.len != other.len {
+            return false;
+        }
+        self.expose().ct_eq(other.expose()).into()
     }
 }
 

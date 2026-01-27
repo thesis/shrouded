@@ -173,7 +173,11 @@ impl fmt::Debug for ShroudedString {
 
 impl PartialEq for ShroudedString {
     fn eq(&self, other: &Self) -> bool {
-        self.expose() == other.expose()
+        use subtle::ConstantTimeEq;
+        if self.len != other.len {
+            return false;
+        }
+        self.as_bytes().ct_eq(other.as_bytes()).into()
     }
 }
 

@@ -9,6 +9,7 @@ description = "Secure memory management with mlock, guard pages, and automatic z
 [dependencies]
 zeroize.workspace = true
 thiserror.workspace = true
+subtle = "2.5"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"

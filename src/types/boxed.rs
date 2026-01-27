@@ -148,6 +148,20 @@ impl<T: Zeroize> Shroud<T> {
     pub const fn size(&self) -> usize {
         mem::size_of::<T>()
     }
+
+    /// Performs a constant-time byte comparison of the underlying memory.
+    ///
+    /// This is safe for types where byte equality implies value equality
+    /// (e.g., arrays, simple structs without padding). For types with padding
+    /// or non-trivial representations, use the `PartialEq` implementation instead.
+    ///
+    /// # Warning
+    /// This compares raw bytes and may not be appropriate for types with padding
+    /// bytes or platform-dependent representations.
+    pub fn ct_eq(&self, other: &Self) -> subtle::Choice {
+        use subtle::ConstantTimeEq;
+        self.alloc.as_slice().ct_eq(other.alloc.as_slice())
+    }
 }
 
 impl<T: Zeroize> Expose for Shroud<T> {

@@ -164,7 +164,8 @@ impl<const N: usize> fmt::Debug for ShroudedArray<N> {
 
 impl<const N: usize> PartialEq for ShroudedArray<N> {
     fn eq(&self, other: &Self) -> bool {
-        self.expose() == other.expose()
+        use subtle::ConstantTimeEq;
+        self.expose().as_slice().ct_eq(other.expose().as_slice()).into()
     }
 }
 
