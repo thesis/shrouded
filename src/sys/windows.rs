@@ -58,7 +58,7 @@ pub fn allocate_aligned(size: usize, alignment: usize, policy: Policy) -> Result
             alloc_align: alignment,
             is_locked: false,
             has_guard_pages: false,
-            is_protected: false,
+            is_protected: core::cell::Cell::new(false),
         });
     }
 
@@ -144,7 +144,7 @@ pub fn allocate_aligned(size: usize, alignment: usize, policy: Policy) -> Result
         alloc_align: alignment,
         is_locked,
         has_guard_pages,
-        is_protected: false,
+        is_protected: core::cell::Cell::new(false),
     })
 }
 

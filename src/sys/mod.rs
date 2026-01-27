@@ -1,5 +1,6 @@
 //! Platform-specific memory protection implementations.
 
+use core::cell::Cell;
 use crate::error::Result;
 use crate::policy::Policy;
 
@@ -66,7 +67,8 @@ pub struct MemoryRegion {
     #[allow(dead_code)]
     has_guard_pages: bool,
     /// Whether memory is currently set to PROT_NONE (inaccessible).
-    is_protected: bool,
+    /// Uses Cell for interior mutability to allow protection changes via &self.
+    is_protected: Cell<bool>,
 }
 
 // SAFETY: MemoryRegion manages its own memory and synchronization.
@@ -123,48 +125,48 @@ impl MemoryRegion {
     /// Returns whether the memory is currently set to PROT_NONE.
     #[inline]
     pub fn is_protected(&self) -> bool {
-        self.is_protected
+        self.is_protected.get()
     }
 
     /// Makes the memory region readable (PROT_READ).
     #[allow(dead_code)]
-    pub fn make_readable(&mut self) -> Result<()> {
-        if !self.is_protected {
+    pub fn make_readable(&self) -> Result<()> {
+        if !self.is_protected.get() {
             return Ok(());
         }
         platform_impl::protect(self.ptr, self.len, Protection::Read)?;
-        self.is_protected = false;
+        self.is_protected.set(false);
         Ok(())
     }
 
     /// Makes the memory region readable and writable (PROT_READ | PROT_WRITE).
-    pub fn make_writable(&mut self) -> Result<()> {
-        if !self.is_protected {
+    pub fn make_writable(&self) -> Result<()> {
+        if !self.is_protected.get() {
             return Ok(());
         }
         platform_impl::protect(self.ptr, self.len, Protection::ReadWrite)?;
-        self.is_protected = false;
+        self.is_protected.set(false);
         Ok(())
     }
 
     /// Makes the memory region inaccessible (PROT_NONE).
-    pub fn make_inaccessible(&mut self) -> Result<()> {
-        if self.is_protected {
+    pub fn make_inaccessible(&self) -> Result<()> {
+        if self.is_protected.get() {
             return Ok(());
         }
         platform_impl::protect(self.ptr, self.len, Protection::None)?;
-        self.is_protected = true;
+        self.is_protected.set(true);
         Ok(())
     }
 
     /// Zeroizes the memory contents using volatile writes.
-    fn zeroize(&mut self) {
+    fn zeroize(&self) {
         if self.len == 0 {
             return;
         }
 
         // Temporarily make memory writable if protected
-        let was_protected = self.is_protected;
+        let was_protected = self.is_protected.get();
         if was_protected {
             let _ = self.make_writable();
         }

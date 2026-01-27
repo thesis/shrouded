@@ -94,18 +94,18 @@ impl ProtectedAlloc {
 
     /// Makes the memory region readable.
     #[allow(dead_code)]
-    pub fn make_readable(&mut self) -> Result<()> {
+    pub fn make_readable(&self) -> Result<()> {
         self.region.make_readable()
     }
 
     /// Makes the memory region readable and writable.
-    pub fn make_writable(&mut self) -> Result<()> {
+    pub fn make_writable(&self) -> Result<()> {
         self.region.make_writable()
     }
 
     /// Makes the memory region inaccessible (PROT_NONE).
     #[allow(dead_code)]
-    pub fn make_inaccessible(&mut self) -> Result<()> {
+    pub fn make_inaccessible(&self) -> Result<()> {
         self.region.make_inaccessible()
     }
 
