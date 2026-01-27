@@ -18,7 +18,6 @@ impl<'a, T: ?Sized> ExposeGuard<'a, T> {
     /// # Safety
     /// The caller must ensure that calling `relock` is safe after the guard
     /// is dropped and that the data reference remains valid.
-    #[allow(dead_code)]
     pub(crate) fn new(data: &'a T, relock: impl FnOnce() + 'a) -> Self {
         Self {
             data,
@@ -58,7 +57,6 @@ pub struct ExposeGuardMut<'a, T: ?Sized> {
 
 impl<'a, T: ?Sized> ExposeGuardMut<'a, T> {
     /// Creates a new mutable expose guard.
-    #[allow(dead_code)]
     pub(crate) fn new(data: &'a mut T, relock: impl FnOnce() + 'a) -> Self {
         Self {
             data,

@@ -138,17 +138,38 @@ impl ExposeMut for ShroudedBytes {
 
 impl ExposeGuarded for ShroudedBytes {
     fn expose_guarded(&self) -> Result<ExposeGuard<'_, [u8]>> {
-        // For now, return an unguarded reference
-        // Full PROT_NONE guarding would require interior mutability
-        Ok(ExposeGuard::unguarded(&self.alloc.as_slice()[..self.len]))
+        if self.policy.protection_enabled() {
+            self.alloc.make_readable()?;
+            let alloc_ref = &self.alloc;
+            let data = &self.alloc.as_slice()[..self.len];
+
+            Ok(ExposeGuard::new(data, move || {
+                let _ = alloc_ref.make_inaccessible();
+            }))
+        } else {
+            Ok(ExposeGuard::unguarded(&self.alloc.as_slice()[..self.len]))
+        }
     }
 }
 
 impl ExposeGuardedMut for ShroudedBytes {
     fn expose_guarded_mut(&mut self) -> Result<ExposeGuardMut<'_, [u8]>> {
-        Ok(ExposeGuardMut::unguarded(
-            &mut self.alloc.as_mut_slice()[..self.len],
-        ))
+        if self.policy.protection_enabled() {
+            self.alloc.make_writable()?;
+            let alloc_ptr = &self.alloc as *const ProtectedAlloc;
+            let data = &mut self.alloc.as_mut_slice()[..self.len];
+
+            Ok(ExposeGuardMut::new(data, move || {
+                // SAFETY: The guard holds a mutable borrow of self, so alloc is still alive
+                unsafe {
+                    let _ = (*alloc_ptr).make_inaccessible();
+                }
+            }))
+        } else {
+            Ok(ExposeGuardMut::unguarded(
+                &mut self.alloc.as_mut_slice()[..self.len],
+            ))
+        }
     }
 }
 

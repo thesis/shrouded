@@ -144,19 +144,46 @@ impl ExposeMut for ShroudedString {
 
 impl ExposeGuarded for ShroudedString {
     fn expose_guarded(&self) -> Result<ExposeGuard<'_, str>> {
-        // SAFETY: We validated UTF-8 on construction
-        let s = unsafe { core::str::from_utf8_unchecked(&self.alloc.as_slice()[..self.len]) };
-        Ok(ExposeGuard::unguarded(s))
+        if self.policy.protection_enabled() {
+            self.alloc.make_readable()?;
+            let alloc_ref = &self.alloc;
+            // SAFETY: We validated UTF-8 on construction
+            let s = unsafe { core::str::from_utf8_unchecked(&self.alloc.as_slice()[..self.len]) };
+
+            Ok(ExposeGuard::new(s, move || {
+                let _ = alloc_ref.make_inaccessible();
+            }))
+        } else {
+            // SAFETY: We validated UTF-8 on construction
+            let s = unsafe { core::str::from_utf8_unchecked(&self.alloc.as_slice()[..self.len]) };
+            Ok(ExposeGuard::unguarded(s))
+        }
     }
 }
 
 impl ExposeGuardedMut for ShroudedString {
     fn expose_guarded_mut(&mut self) -> Result<ExposeGuardMut<'_, str>> {
-        // SAFETY: We validated UTF-8 on construction
-        let s = unsafe {
-            core::str::from_utf8_unchecked_mut(&mut self.alloc.as_mut_slice()[..self.len])
-        };
-        Ok(ExposeGuardMut::unguarded(s))
+        if self.policy.protection_enabled() {
+            self.alloc.make_writable()?;
+            let alloc_ptr = &self.alloc as *const ProtectedAlloc;
+            // SAFETY: We validated UTF-8 on construction
+            let s = unsafe {
+                core::str::from_utf8_unchecked_mut(&mut self.alloc.as_mut_slice()[..self.len])
+            };
+
+            Ok(ExposeGuardMut::new(s, move || {
+                // SAFETY: The guard holds a mutable borrow of self, so alloc is still alive
+                unsafe {
+                    let _ = (*alloc_ptr).make_inaccessible();
+                }
+            }))
+        } else {
+            // SAFETY: We validated UTF-8 on construction
+            let s = unsafe {
+                core::str::from_utf8_unchecked_mut(&mut self.alloc.as_mut_slice()[..self.len])
+            };
+            Ok(ExposeGuardMut::unguarded(s))
+        }
     }
 }
 

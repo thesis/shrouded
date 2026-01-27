@@ -139,15 +139,38 @@ impl<const N: usize> ExposeMut for ShroudedArray<N> {
 
 impl<const N: usize> ExposeGuarded for ShroudedArray<N> {
     fn expose_guarded(&self) -> Result<ExposeGuard<'_, [u8; N]>> {
-        let array_ref: &[u8; N] = self.alloc.as_slice().try_into().expect("allocation size mismatch");
-        Ok(ExposeGuard::unguarded(array_ref))
+        if self.policy.protection_enabled() {
+            self.alloc.make_readable()?;
+            let alloc_ref = &self.alloc;
+            let array_ref: &[u8; N] = self.alloc.as_slice().try_into().expect("allocation size mismatch");
+
+            Ok(ExposeGuard::new(array_ref, move || {
+                let _ = alloc_ref.make_inaccessible();
+            }))
+        } else {
+            let array_ref: &[u8; N] = self.alloc.as_slice().try_into().expect("allocation size mismatch");
+            Ok(ExposeGuard::unguarded(array_ref))
+        }
     }
 }
 
 impl<const N: usize> ExposeGuardedMut for ShroudedArray<N> {
     fn expose_guarded_mut(&mut self) -> Result<ExposeGuardMut<'_, [u8; N]>> {
-        let array_ref: &mut [u8; N] = self.alloc.as_mut_slice().try_into().expect("allocation size mismatch");
-        Ok(ExposeGuardMut::unguarded(array_ref))
+        if self.policy.protection_enabled() {
+            self.alloc.make_writable()?;
+            let alloc_ptr = &self.alloc as *const ProtectedAlloc;
+            let array_ref: &mut [u8; N] = self.alloc.as_mut_slice().try_into().expect("allocation size mismatch");
+
+            Ok(ExposeGuardMut::new(array_ref, move || {
+                // SAFETY: The guard holds a mutable borrow of self, so alloc is still alive
+                unsafe {
+                    let _ = (*alloc_ptr).make_inaccessible();
+                }
+            }))
+        } else {
+            let array_ref: &mut [u8; N] = self.alloc.as_mut_slice().try_into().expect("allocation size mismatch");
+            Ok(ExposeGuardMut::unguarded(array_ref))
+        }
     }
 }
 

@@ -186,17 +186,42 @@ impl<T: Zeroize> ExposeMut for Shroud<T> {
 
 impl<T: Zeroize> ExposeGuarded for Shroud<T> {
     fn expose_guarded(&self) -> Result<ExposeGuard<'_, T>> {
-        // SAFETY: The memory was properly initialized with a T value
-        let value_ref = unsafe { &*(self.alloc.as_slice().as_ptr() as *const T) };
-        Ok(ExposeGuard::unguarded(value_ref))
+        if self.policy.protection_enabled() {
+            self.alloc.make_readable()?;
+            let alloc_ref = &self.alloc;
+            // SAFETY: The memory was properly initialized with a T value
+            let value_ref = unsafe { &*(self.alloc.as_slice().as_ptr() as *const T) };
+
+            Ok(ExposeGuard::new(value_ref, move || {
+                let _ = alloc_ref.make_inaccessible();
+            }))
+        } else {
+            // SAFETY: The memory was properly initialized with a T value
+            let value_ref = unsafe { &*(self.alloc.as_slice().as_ptr() as *const T) };
+            Ok(ExposeGuard::unguarded(value_ref))
+        }
     }
 }
 
 impl<T: Zeroize> ExposeGuardedMut for Shroud<T> {
     fn expose_guarded_mut(&mut self) -> Result<ExposeGuardMut<'_, T>> {
-        // SAFETY: The memory was properly initialized with a T value
-        let value_ref = unsafe { &mut *(self.alloc.as_mut_slice().as_mut_ptr() as *mut T) };
-        Ok(ExposeGuardMut::unguarded(value_ref))
+        if self.policy.protection_enabled() {
+            self.alloc.make_writable()?;
+            let alloc_ptr = &self.alloc as *const ProtectedAlloc;
+            // SAFETY: The memory was properly initialized with a T value
+            let value_ref = unsafe { &mut *(self.alloc.as_mut_slice().as_mut_ptr() as *mut T) };
+
+            Ok(ExposeGuardMut::new(value_ref, move || {
+                // SAFETY: The guard holds a mutable borrow of self, so alloc is still alive
+                unsafe {
+                    let _ = (*alloc_ptr).make_inaccessible();
+                }
+            }))
+        } else {
+            // SAFETY: The memory was properly initialized with a T value
+            let value_ref = unsafe { &mut *(self.alloc.as_mut_slice().as_mut_ptr() as *mut T) };
+            Ok(ExposeGuardMut::unguarded(value_ref))
+        }
     }
 }
 
