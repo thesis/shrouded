@@ -69,13 +69,14 @@ impl<T: Zeroize> Shroud<T> {
     /// Creates a new `Shroud<T>` with a specific policy.
     pub fn new_with_policy(value: T, policy: Policy) -> Result<Self> {
         let size = mem::size_of::<T>();
+        let align = mem::align_of::<T>();
         if size == 0 {
             return Err(ShroudError::AllocationFailed(
                 "cannot shroud zero-sized types".to_string(),
             ));
         }
 
-        let mut alloc = ProtectedAlloc::new(size, policy)?;
+        let mut alloc = ProtectedAlloc::new_aligned(size, align, policy)?;
 
         // Copy the value into protected memory
         // SAFETY: alloc is properly sized and aligned for T
@@ -120,13 +121,14 @@ impl<T: Zeroize> Shroud<T> {
         F: FnOnce() -> T,
     {
         let size = mem::size_of::<T>();
+        let align = mem::align_of::<T>();
         if size == 0 {
             return Err(ShroudError::AllocationFailed(
                 "cannot shroud zero-sized types".to_string(),
             ));
         }
 
-        let mut alloc = ProtectedAlloc::new(size, policy)?;
+        let mut alloc = ProtectedAlloc::new_aligned(size, align, policy)?;
 
         // Initialize the value directly in protected memory
         // This minimizes the time the value exists on the stack
