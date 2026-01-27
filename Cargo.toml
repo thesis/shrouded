@@ -1,0 +1,33 @@
+[package]
+name = "shroud"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license = "MIT"
+description = "Secure memory management with mlock, guard pages, and automatic zeroization"
+
+[dependencies]
+zeroize.workspace = true
+thiserror.workspace = true
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.52", features = ["Win32_System_Memory", "Win32_Foundation"] }
+
+[dependencies.serde]
+version = "1.0"
+optional = true
+default-features = false
+features = ["derive"]
+
+[features]
+default = ["mlock", "guard-pages"]
+mlock = []
+guard-pages = []
+serde = ["dep:serde"]
+
+[dev-dependencies]
+tempfile = "3"
+serde_json = "1.0"
