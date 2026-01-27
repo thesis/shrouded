@@ -21,8 +21,25 @@ pub fn page_size() -> usize {
 /// - Memory locked to physical RAM (mlock) if enabled
 /// - Guard pages before and after (if enabled)
 /// - Core dump exclusion (MADV_DONTDUMP on Linux)
+#[allow(dead_code)]
 pub fn allocate(size: usize, policy: Policy) -> Result<MemoryRegion> {
-    platform_impl::allocate(size, policy)
+    allocate_aligned(size, 1, policy)
+}
+
+/// Allocates a protected memory region with the specified alignment.
+///
+/// # Arguments
+/// * `size` - Size of the data region in bytes
+/// * `alignment` - Required alignment in bytes (must be a power of 2 and <= page_size)
+/// * `policy` - Memory protection policy
+///
+/// The returned region will have:
+/// - Memory locked to physical RAM (mlock) if enabled
+/// - Guard pages before and after (if enabled)
+/// - Core dump exclusion (MADV_DONTDUMP on Linux)
+/// - Data pointer aligned to the requested alignment
+pub fn allocate_aligned(size: usize, alignment: usize, policy: Policy) -> Result<MemoryRegion> {
+    platform_impl::allocate_aligned(size, alignment, policy)
 }
 
 /// A protected memory region.
@@ -41,6 +58,8 @@ pub struct MemoryRegion {
     alloc_ptr: *mut u8,
     /// Total size of the allocation (including guard pages).
     alloc_len: usize,
+    /// Alignment of the allocation (used for deallocation on fallback platforms).
+    alloc_align: usize,
     /// Whether memory is currently locked with mlock.
     is_locked: bool,
     /// Whether guard pages are present.
@@ -178,7 +197,7 @@ impl Drop for MemoryRegion {
         }
 
         // 3. Deallocate (munmap/VirtualFree)
-        let _ = platform_impl::deallocate(self.alloc_ptr, self.alloc_len);
+        let _ = platform_impl::deallocate(self.alloc_ptr, self.alloc_len, self.alloc_align);
     }
 }
 

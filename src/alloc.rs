@@ -32,7 +32,15 @@ impl ProtectedAlloc {
     ///
     /// The memory is allocated and protected according to the given policy.
     pub fn new(size: usize, policy: Policy) -> Result<Self> {
-        let region = sys::allocate(size, policy)?;
+        Self::new_aligned(size, 1, policy)
+    }
+
+    /// Creates a new protected allocation of the given size with the specified alignment.
+    ///
+    /// The memory is allocated and protected according to the given policy.
+    /// The alignment must be a power of 2 and not exceed the system page size.
+    pub fn new_aligned(size: usize, alignment: usize, policy: Policy) -> Result<Self> {
+        let region = sys::allocate_aligned(size, alignment, policy)?;
         Ok(Self { region })
     }
 

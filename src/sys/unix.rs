@@ -18,20 +18,42 @@ fn round_up_to_page(size: usize, page_size: usize) -> usize {
 }
 
 /// Allocates a protected memory region using mmap.
+#[allow(dead_code)]
 pub fn allocate(size: usize, policy: Policy) -> Result<MemoryRegion> {
+    allocate_aligned(size, 1, policy)
+}
+
+/// Allocates a protected memory region using mmap with the specified alignment.
+///
+/// # Arguments
+/// * `size` - Size of the data region in bytes
+/// * `alignment` - Required alignment in bytes (must be a power of 2 and <= page_size)
+/// * `policy` - Memory protection policy
+pub fn allocate_aligned(size: usize, alignment: usize, policy: Policy) -> Result<MemoryRegion> {
+    let page_sz = page_size();
+
+    // Validate alignment
+    debug_assert!(alignment.is_power_of_two(), "alignment must be a power of 2");
+    debug_assert!(
+        alignment <= page_sz,
+        "alignment ({}) cannot exceed page size ({})",
+        alignment,
+        page_sz
+    );
+
     if size == 0 {
         return Ok(MemoryRegion {
             ptr: core::ptr::NonNull::dangling().as_ptr(),
             len: 0,
             alloc_ptr: core::ptr::NonNull::dangling().as_ptr(),
             alloc_len: 0,
+            alloc_align: alignment,
             is_locked: false,
             has_guard_pages: false,
             is_protected: false,
         });
     }
 
-    let page_sz = page_size();
     let data_pages = round_up_to_page(size, page_sz);
 
     // Calculate total allocation size with optional guard pages
@@ -61,6 +83,14 @@ pub fn allocate(size: usize, policy: Policy) -> Result<MemoryRegion> {
 
     let alloc_ptr = alloc_ptr as *mut u8;
     let data_ptr = unsafe { alloc_ptr.add(guard_size) };
+
+    // Verify alignment - mmap returns page-aligned memory, so any alignment <= page_size is satisfied
+    debug_assert!(
+        data_ptr as usize % alignment == 0,
+        "data pointer {:p} is not aligned to {} bytes",
+        data_ptr,
+        alignment
+    );
 
     // Set up guard pages (PROT_NONE)
     let has_guard_pages = if use_guard_pages {
@@ -116,6 +146,7 @@ pub fn allocate(size: usize, policy: Policy) -> Result<MemoryRegion> {
         len: size,
         alloc_ptr,
         alloc_len: total_size,
+        alloc_align: alignment,
         is_locked,
         has_guard_pages,
         is_protected: false,
@@ -174,7 +205,10 @@ pub fn unlock(ptr: *mut u8, len: usize) -> Result<()> {
 }
 
 /// Deallocates memory (munmap).
-pub fn deallocate(ptr: *mut u8, len: usize) -> Result<()> {
+///
+/// Note: The `_alignment` parameter is unused for mmap-based allocation
+/// but included for API consistency with the fallback allocator.
+pub fn deallocate(ptr: *mut u8, len: usize, _alignment: usize) -> Result<()> {
     if len == 0 {
         return Ok(());
     }
