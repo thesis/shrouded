@@ -121,6 +121,27 @@ On unsupported platforms, `shroud` falls back to standard allocation with zeroiz
 | Debug redaction | ✓ | ✓ | ✗ |
 | No Serialize | ✓ | ✓ | N/A |
 
+## Usage Notes
+
+Some behaviors may be surprising if you're used to standard Rust types:
+
+1. **No `Clone` trait**: Use `try_clone()` explicitly to copy protected values. This returns `Result` because each clone allocates new protected memory (with mlock).
+
+2. **No `Serialize` trait**: Only `Deserialize` is implemented. To serialize, explicitly call `.expose()` and serialize the inner value. This prevents accidental serialization of secrets.
+
+3. **`expose_guarded()` returns `Result`**: This method can fail if memory protection operations fail. Always handle the error:
+   ```rust
+   let guard = password.expose_guarded()?;
+   do_something(guard.as_bytes());
+   // Memory re-locked when guard is dropped
+   ```
+
+4. **Constant-time comparison**: `PartialEq` uses constant-time comparison to prevent timing attacks. Comparing two `ShroudedString` values is safe.
+
+5. **`try_clone()` allocates new protected memory**: Each clone gets its own mlock'd region with guard pages. This is intentional for security but has performance implications.
+
+6. **Source data is zeroized**: When creating a `ShroudedString` from a `String`, the original `String` is zeroized. The data now lives only in protected memory.
+
 ## License
 
 MIT
