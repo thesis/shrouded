@@ -181,12 +181,23 @@ Some behaviors may be surprising if you're used to standard Rust types:
 
 2. **No `Serialize` trait**: Only `Deserialize` is implemented. To serialize, explicitly call `.expose()` and serialize the inner value. This prevents accidental serialization of secrets.
 
-3. **`expose_guarded()` returns `Result`**: This method can fail if memory protection operations fail. Always handle the error:
+3. **`expose()` vs `expose_guarded()` - why one is fallible**:
+
+   - `expose()` is **infallible** because it returns a direct reference without changing memory permissions. Memory is allocated with read/write access by default.
+
+   - `expose_guarded()` **returns `Result`** because it must call `mprotect()` to change permissions from PROT_NONE to readable, then back to PROT_NONE when the guard is dropped. System calls can fail.
+
    ```rust
+   // Quick access (memory stays accessible)
+   let value = password.expose();
+
+   // Guarded access (memory locked except during access)
    let guard = password.expose_guarded()?;
    do_something(guard.as_bytes());
-   // Memory re-locked when guard is dropped
+   // Memory automatically re-locked when guard is dropped
    ```
+
+   Use `expose()` for convenience; use `expose_guarded()` for maximum security when you want memory inaccessible except during brief access windows.
 
 4. **Constant-time comparison**: `PartialEq` uses constant-time comparison to prevent timing attacks. Comparing two `ShroudedString` values is safe.
 
