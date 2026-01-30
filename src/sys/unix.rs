@@ -59,7 +59,12 @@ pub fn allocate_aligned(size: usize, alignment: usize, policy: Policy) -> Result
     // Calculate total allocation size with optional guard pages
     let use_guard_pages = cfg!(feature = "guard-pages") && policy.protection_enabled();
     let guard_size = if use_guard_pages { page_sz } else { 0 };
-    let total_size = guard_size + data_pages + guard_size;
+    let total_size = guard_size
+        .checked_add(data_pages)
+        .and_then(|s| s.checked_add(guard_size))
+        .ok_or_else(|| ShroudError::AllocationFailed(
+            "size calculation overflow".to_string()
+        ))?;
 
     // Allocate memory with mmap
     // SAFETY: mmap with MAP_ANONYMOUS is safe
