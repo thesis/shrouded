@@ -168,7 +168,13 @@ impl MemoryRegion {
         // Temporarily make memory writable if protected
         let was_protected = self.is_protected.load(Ordering::Acquire);
         if was_protected {
-            let _ = self.make_writable();
+            if let Err(_e) = self.make_writable() {
+                // Failed to unprotect memory for zeroization.
+                // This is a security concern but we can't do much about it.
+                #[cfg(debug_assertions)]
+                eprintln!("shroud: WARNING - failed to unprotect memory for zeroization");
+                return;
+            }
         }
 
         // Use volatile writes to prevent optimizer from eliding the zeroization

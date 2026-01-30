@@ -141,8 +141,18 @@ pub fn allocate_aligned(size: usize, alignment: usize, policy: Policy) -> Result
     {
         // MADV_DONTDUMP = 16 on Linux
         const MADV_DONTDUMP: libc::c_int = 16;
-        unsafe {
-            libc::madvise(data_ptr as *mut libc::c_void, data_pages, MADV_DONTDUMP);
+        let result = unsafe {
+            libc::madvise(data_ptr as *mut libc::c_void, data_pages, MADV_DONTDUMP)
+        };
+        if result != 0 && policy.is_strict() {
+            // Clean up and return error
+            if is_locked {
+                unsafe { libc::munlock(data_ptr as *const libc::c_void, data_pages) };
+            }
+            unsafe { libc::munmap(alloc_ptr as *mut libc::c_void, total_size) };
+            return Err(ShroudError::ProtectFailed(
+                format!("MADV_DONTDUMP failed: {}", std::io::Error::last_os_error())
+            ));
         }
     }
 
