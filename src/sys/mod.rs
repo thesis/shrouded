@@ -1,6 +1,6 @@
 //! Platform-specific memory protection implementations.
 
-use core::cell::Cell;
+use core::sync::atomic::{AtomicBool, Ordering};
 use crate::error::Result;
 use crate::policy::Policy;
 
@@ -67,8 +67,8 @@ pub struct MemoryRegion {
     #[allow(dead_code)]
     has_guard_pages: bool,
     /// Whether memory is currently set to PROT_NONE (inaccessible).
-    /// Uses Cell for interior mutability to allow protection changes via &self.
-    is_protected: Cell<bool>,
+    /// Uses AtomicBool for thread-safe interior mutability.
+    is_protected: AtomicBool,
 }
 
 // SAFETY: MemoryRegion manages its own memory and synchronization.
@@ -125,37 +125,37 @@ impl MemoryRegion {
     /// Returns whether the memory is currently set to PROT_NONE.
     #[inline]
     pub fn is_protected(&self) -> bool {
-        self.is_protected.get()
+        self.is_protected.load(Ordering::Acquire)
     }
 
     /// Makes the memory region readable (PROT_READ).
     #[allow(dead_code)]
     pub fn make_readable(&self) -> Result<()> {
-        if !self.is_protected.get() {
+        if !self.is_protected.load(Ordering::Acquire) {
             return Ok(());
         }
         platform_impl::protect(self.ptr, self.len, Protection::Read)?;
-        self.is_protected.set(false);
+        self.is_protected.store(false, Ordering::Release);
         Ok(())
     }
 
     /// Makes the memory region readable and writable (PROT_READ | PROT_WRITE).
     pub fn make_writable(&self) -> Result<()> {
-        if !self.is_protected.get() {
+        if !self.is_protected.load(Ordering::Acquire) {
             return Ok(());
         }
         platform_impl::protect(self.ptr, self.len, Protection::ReadWrite)?;
-        self.is_protected.set(false);
+        self.is_protected.store(false, Ordering::Release);
         Ok(())
     }
 
     /// Makes the memory region inaccessible (PROT_NONE).
     pub fn make_inaccessible(&self) -> Result<()> {
-        if self.is_protected.get() {
+        if self.is_protected.load(Ordering::Acquire) {
             return Ok(());
         }
         platform_impl::protect(self.ptr, self.len, Protection::None)?;
-        self.is_protected.set(true);
+        self.is_protected.store(true, Ordering::Release);
         Ok(())
     }
 
@@ -166,7 +166,7 @@ impl MemoryRegion {
         }
 
         // Temporarily make memory writable if protected
-        let was_protected = self.is_protected.get();
+        let was_protected = self.is_protected.load(Ordering::Acquire);
         if was_protected {
             let _ = self.make_writable();
         }
@@ -179,7 +179,7 @@ impl MemoryRegion {
             }
         }
         // Memory barrier to ensure the writes complete
-        core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
+        core::sync::atomic::compiler_fence(Ordering::SeqCst);
 
         // Restore protection if it was set
         if was_protected {
