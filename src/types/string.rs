@@ -4,7 +4,7 @@ use core::fmt;
 use crate::error::{Result, ShroudError};
 use crate::policy::Policy;
 use crate::traits::{Expose, ExposeGuard, ExposeGuardMut, ExposeGuarded, ExposeGuardedMut, ExposeMut};
-use crate::alloc::{zeroize_slice, ProtectedAlloc};
+use crate::alloc::ProtectedAlloc;
 
 /// A UTF-8 string stored in protected memory.
 ///
@@ -44,15 +44,12 @@ impl ShroudedString {
         let len = source.len();
         let mut alloc = ProtectedAlloc::new(len, policy)?;
 
-        // Copy the data
-        alloc.as_mut_slice().copy_from_slice(source.as_bytes());
-
-        // Zeroize the source String
-        // SAFETY: We're zeroizing the String's buffer, which is valid UTF-8
-        // (all zeros is valid, and we're about to drop it anyway)
+        // SAFETY: String's underlying bytes are valid for mutation.
+        // Use write_and_zeroize_source to atomically copy and zeroize,
+        // avoiding a window where the secret exists in both locations.
         unsafe {
             let bytes = source.as_bytes_mut();
-            zeroize_slice(bytes);
+            alloc.write_and_zeroize_source(bytes)?;
         }
         drop(source);
 
@@ -69,14 +66,12 @@ impl ShroudedString {
         let len = source.len();
         let mut alloc = ProtectedAlloc::new(len, policy)?;
 
-        // Copy the data
-        alloc.as_mut_slice().copy_from_slice(source.as_bytes());
-
-        // Zeroize the source
-        // SAFETY: Zeroizing the string is safe, all zeros is valid UTF-8 (empty-ish)
+        // SAFETY: Zeroizing the string is safe, all zeros is valid UTF-8.
+        // Use write_and_zeroize_source to atomically copy and zeroize,
+        // avoiding a window where the secret exists in both locations.
         unsafe {
             let bytes = source.as_bytes_mut();
-            zeroize_slice(bytes);
+            alloc.write_and_zeroize_source(bytes)?;
         }
 
         Ok(Self { alloc, len, policy })
