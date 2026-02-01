@@ -77,6 +77,38 @@ impl ShroudedString {
         Ok(Self { alloc, len, policy })
     }
 
+    /// Creates a new `ShroudedString` by copying from an immutable string slice.
+    ///
+    /// Use this when the source is in memory you don't control (e.g., from another
+    /// crate like `keepass`). The source cannot be zeroized since it's immutable,
+    /// but this avoids creating an intermediate heap allocation that `.to_string()`
+    /// would require.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use shroud::{ShroudedString, Expose};
+    ///
+    /// // Copy from a &str without intermediate allocation
+    /// let secret = ShroudedString::from_str("password").unwrap();
+    /// assert_eq!(secret.expose(), "password");
+    /// ```
+    pub fn from_str(source: &str) -> Result<Self> {
+        Self::from_str_with_policy(source, Policy::default())
+    }
+
+    /// Creates a new `ShroudedString` by copying from an immutable string slice
+    /// with a specific policy.
+    ///
+    /// The source cannot be zeroized since it's immutable. Use this when copying
+    /// from memory you don't control.
+    pub fn from_str_with_policy(source: &str, policy: Policy) -> Result<Self> {
+        let len = source.len();
+        let mut alloc = ProtectedAlloc::new(len, policy)?;
+        alloc.as_mut_slice()[..len].copy_from_slice(source.as_bytes());
+        Ok(Self { alloc, len, policy })
+    }
+
     /// Creates an empty `ShroudedString`.
     pub fn empty() -> Result<Self> {
         Ok(Self {
@@ -240,6 +272,29 @@ mod tests {
         let secret = ShroudedString::empty().unwrap();
         assert!(secret.is_empty());
         assert_eq!(secret.expose(), "");
+    }
+
+    #[test]
+    fn test_from_str() {
+        // This copies directly without intermediate String allocation
+        let secret = ShroudedString::from_str("hunter2").unwrap();
+        assert_eq!(secret.expose(), "hunter2");
+        assert_eq!(secret.len(), 7);
+    }
+
+    #[test]
+    fn test_from_str_empty() {
+        let secret = ShroudedString::from_str("").unwrap();
+        assert!(secret.is_empty());
+        assert_eq!(secret.expose(), "");
+    }
+
+    #[test]
+    fn test_from_str_equals_new() {
+        // Verify from_str produces same result as new()
+        let from_str = ShroudedString::from_str("test").unwrap();
+        let from_new = ShroudedString::new("test".to_string()).unwrap();
+        assert_eq!(from_str, from_new);
     }
 
     #[test]

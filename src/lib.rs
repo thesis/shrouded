@@ -81,6 +81,15 @@ pub use traits::{Expose, ExposeGuard, ExposeGuardMut, ExposeGuarded, ExposeGuard
 pub use builder::ShroudBuilder;
 pub use types::{Shroud, ShroudedArray, ShroudedBytes, ShroudedString};
 
+#[cfg(feature = "digest")]
+pub use types::ShroudedHasher;
+
+#[cfg(feature = "sha1")]
+pub use types::ShroudedSha1;
+
+#[cfg(feature = "sha2")]
+pub use types::{ShroudedSha256, ShroudedSha384, ShroudedSha512};
+
 // Re-export zeroize for convenience
 pub use zeroize::Zeroize;
 
