@@ -28,7 +28,24 @@ default = ["mlock", "guard-pages"]
 mlock = []
 guard-pages = []
 serde = ["dep:serde"]
+digest = ["dep:digest"]
+sha1 = ["digest", "dep:sha1"]
+sha2 = ["digest", "dep:sha2"]
+
+[dependencies.digest]
+version = "0.10"
+optional = true
+
+[dependencies.sha1]
+version = "0.10"
+optional = true
+
+[dependencies.sha2]
+version = "0.10"
+optional = true
 
 [dev-dependencies]
 tempfile = "3"
 serde_json = "1.0"
+hex = "0.4"
+proptest = "1.4"
