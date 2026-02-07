@@ -72,7 +72,7 @@ impl ProtectedAlloc {
     pub fn as_slice(&self) -> &[u8] {
         assert!(
             !self.region.is_protected(),
-            "cannot read protected memory - call make_readable() first"
+            "cannot read protected memory - use expose_guarded() for safe access"
         );
         // SAFETY: We've verified the memory is not protected
         unsafe { self.region.as_slice() }
@@ -86,7 +86,7 @@ impl ProtectedAlloc {
     pub fn as_mut_slice(&mut self) -> &mut [u8] {
         assert!(
             !self.region.is_protected(),
-            "cannot write protected memory - call make_writable() first"
+            "cannot write protected memory - use expose_guarded_mut() for safe access"
         );
         // SAFETY: We've verified the memory is not protected
         unsafe { self.region.as_mut_slice() }
