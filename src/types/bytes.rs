@@ -107,9 +107,15 @@ impl ShroudedBytes {
 
     /// Creates a clone of this `ShroudedBytes`.
     ///
+    /// Returns `Err(ShroudError::RegionLocked)` if the memory is currently
+    /// protected. Use `expose_guarded()` to access protected data instead.
+    ///
     /// Note: This is an explicit method rather than implementing `Clone` to
     /// make cloning secrets a deliberate choice.
     pub fn try_clone(&self) -> Result<Self> {
+        if self.alloc.is_protected() {
+            return Err(crate::error::ShroudError::RegionLocked);
+        }
         let mut alloc = ProtectedAlloc::new(self.len, self.policy)?;
         alloc.as_mut_slice().copy_from_slice(self.alloc.as_slice());
         Ok(Self {
@@ -239,6 +245,25 @@ mod tests {
         let cloned = secret.try_clone().unwrap();
 
         assert_eq!(secret.expose(), cloned.expose());
+    }
+
+    #[test]
+    fn test_try_clone_fails_on_protected_memory() {
+        let mut data = vec![42u8; 16];
+        let secret = ShroudedBytes::from_slice(&mut data).unwrap();
+
+        // expose_guarded() makes memory inaccessible when the guard drops
+        {
+            let _guard = secret.expose_guarded().unwrap();
+        }
+
+        // try_clone must return Err, not bypass protection
+        let result = secret.try_clone();
+        assert!(result.is_err());
+        assert!(matches!(
+            result.unwrap_err(),
+            crate::error::ShroudError::RegionLocked
+        ));
     }
 
     #[test]
