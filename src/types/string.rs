@@ -312,6 +312,25 @@ mod tests {
     }
 
     #[test]
+    fn test_try_clone_fails_on_protected_memory() {
+        let secret = ShroudedString::new("secret".to_string()).unwrap();
+
+        // expose_guarded() makes memory inaccessible when the guard drops
+        {
+            let guard = secret.expose_guarded().unwrap();
+            assert_eq!(&*guard, "secret");
+        }
+
+        // try_clone must return Err, not bypass protection
+        let result = secret.try_clone();
+        assert!(result.is_err());
+        assert!(matches!(
+            result.unwrap_err(),
+            ShroudError::RegionLocked
+        ));
+    }
+
+    #[test]
     fn test_debug_redacted() {
         let secret = ShroudedString::new("password123".to_string()).unwrap();
         let debug_str = format!("{:?}", secret);

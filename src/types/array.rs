@@ -247,6 +247,24 @@ mod tests {
     }
 
     #[test]
+    fn test_try_clone_fails_on_protected_memory() {
+        let arr: ShroudedArray<8> = ShroudedArray::new_with(|buf| buf.fill(0x42)).unwrap();
+
+        // expose_guarded() makes memory inaccessible when the guard drops
+        {
+            let _guard = arr.expose_guarded().unwrap();
+        }
+
+        // try_clone must return Err, not bypass protection
+        let result = arr.try_clone();
+        assert!(result.is_err());
+        assert!(matches!(
+            result.unwrap_err(),
+            crate::error::ShroudError::RegionLocked
+        ));
+    }
+
+    #[test]
     fn test_debug_redacted() {
         let arr: ShroudedArray<32> = ShroudedArray::new_with(|buf| buf.fill(0x42)).unwrap();
         let debug_str = format!("{:?}", arr);
