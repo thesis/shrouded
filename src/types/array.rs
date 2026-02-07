@@ -107,9 +107,15 @@ impl<const N: usize> ShroudedArray<N> {
 
     /// Creates a clone of this `ShroudedArray`.
     ///
+    /// Returns `Err(ShroudError::RegionLocked)` if the memory is currently
+    /// protected. Use `expose_guarded()` to access protected data instead.
+    ///
     /// Note: This is an explicit method rather than implementing `Clone` to
     /// make cloning secrets a deliberate choice.
     pub fn try_clone(&self) -> Result<Self> {
+        if self.alloc.is_protected() {
+            return Err(crate::error::ShroudError::RegionLocked);
+        }
         let mut alloc = ProtectedAlloc::new(N, self.policy)?;
         alloc.as_mut_slice().copy_from_slice(self.alloc.as_slice());
         Ok(Self {
