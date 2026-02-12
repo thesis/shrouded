@@ -5,9 +5,9 @@
 
 #![allow(dead_code)]
 
+use super::{MemoryRegion, Protection};
 use crate::error::{Result, ShroudError};
 use crate::policy::Policy;
-use super::{MemoryRegion, Protection};
 
 /// Returns the page size (uses a common default of 4096).
 pub fn page_size() -> usize {
@@ -27,7 +27,10 @@ pub fn allocate(size: usize, policy: Policy) -> Result<MemoryRegion> {
 /// * `_policy` - Memory protection policy (ignored in fallback)
 pub fn allocate_aligned(size: usize, alignment: usize, _policy: Policy) -> Result<MemoryRegion> {
     // Validate alignment
-    debug_assert!(alignment.is_power_of_two(), "alignment must be a power of 2");
+    debug_assert!(
+        alignment.is_power_of_two(),
+        "alignment must be a power of 2"
+    );
 
     if size == 0 {
         return Ok(MemoryRegion {

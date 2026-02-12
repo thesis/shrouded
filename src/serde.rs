@@ -26,8 +26,8 @@
 //! }
 //! ```
 
-use serde::de::{self, Deserialize, Deserializer, Visitor};
 use crate::types::{ShroudedBytes, ShroudedString};
+use serde::de::{self, Deserialize, Deserializer, Visitor};
 
 /// Deserializes a `ShroudedString` from a string value.
 ///

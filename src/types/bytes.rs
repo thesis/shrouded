@@ -1,10 +1,12 @@
 //! Dynamic-size protected byte buffer.
 
-use core::fmt;
 use crate::alloc::ProtectedAlloc;
 use crate::error::Result;
 use crate::policy::Policy;
-use crate::traits::{Expose, ExposeGuard, ExposeGuardMut, ExposeGuarded, ExposeGuardedMut, ExposeMut};
+use crate::traits::{
+    Expose, ExposeGuard, ExposeGuardMut, ExposeGuarded, ExposeGuardedMut, ExposeMut,
+};
+use core::fmt;
 
 /// A dynamic-size protected byte buffer.
 ///

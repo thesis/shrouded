@@ -1,10 +1,12 @@
 //! Fixed-size protected array.
 
-use core::fmt;
 use crate::alloc::ProtectedAlloc;
 use crate::error::Result;
 use crate::policy::Policy;
-use crate::traits::{Expose, ExposeGuard, ExposeGuardMut, ExposeGuarded, ExposeGuardedMut, ExposeMut};
+use crate::traits::{
+    Expose, ExposeGuard, ExposeGuardMut, ExposeGuarded, ExposeGuardedMut, ExposeMut,
+};
+use core::fmt;
 
 /// A fixed-size protected byte array.
 ///
@@ -131,7 +133,10 @@ impl<const N: usize> Expose for ShroudedArray<N> {
     #[inline]
     fn expose(&self) -> &[u8; N] {
         // SAFETY: We know the allocation is exactly N bytes
-        self.alloc.as_slice().try_into().expect("allocation size mismatch")
+        self.alloc
+            .as_slice()
+            .try_into()
+            .expect("allocation size mismatch")
     }
 }
 
@@ -139,7 +144,10 @@ impl<const N: usize> ExposeMut for ShroudedArray<N> {
     #[inline]
     fn expose_mut(&mut self) -> &mut [u8; N] {
         // SAFETY: We know the allocation is exactly N bytes
-        self.alloc.as_mut_slice().try_into().expect("allocation size mismatch")
+        self.alloc
+            .as_mut_slice()
+            .try_into()
+            .expect("allocation size mismatch")
     }
 }
 
@@ -148,13 +156,21 @@ impl<const N: usize> ExposeGuarded for ShroudedArray<N> {
         if self.policy.protection_enabled() {
             self.alloc.make_readable()?;
             let alloc_ref = &self.alloc;
-            let array_ref: &[u8; N] = self.alloc.as_slice().try_into().expect("allocation size mismatch");
+            let array_ref: &[u8; N] = self
+                .alloc
+                .as_slice()
+                .try_into()
+                .expect("allocation size mismatch");
 
             Ok(ExposeGuard::new(array_ref, move || {
                 let _ = alloc_ref.make_inaccessible();
             }))
         } else {
-            let array_ref: &[u8; N] = self.alloc.as_slice().try_into().expect("allocation size mismatch");
+            let array_ref: &[u8; N] = self
+                .alloc
+                .as_slice()
+                .try_into()
+                .expect("allocation size mismatch");
             Ok(ExposeGuard::unguarded(array_ref))
         }
     }
@@ -165,7 +181,11 @@ impl<const N: usize> ExposeGuardedMut for ShroudedArray<N> {
         if self.policy.protection_enabled() {
             self.alloc.make_writable()?;
             let alloc_ptr = &self.alloc as *const ProtectedAlloc;
-            let array_ref: &mut [u8; N] = self.alloc.as_mut_slice().try_into().expect("allocation size mismatch");
+            let array_ref: &mut [u8; N] = self
+                .alloc
+                .as_mut_slice()
+                .try_into()
+                .expect("allocation size mismatch");
 
             Ok(ExposeGuardMut::new(array_ref, move || {
                 // SAFETY: The guard holds a mutable borrow of self, so alloc is still alive
@@ -174,7 +194,11 @@ impl<const N: usize> ExposeGuardedMut for ShroudedArray<N> {
                 }
             }))
         } else {
-            let array_ref: &mut [u8; N] = self.alloc.as_mut_slice().try_into().expect("allocation size mismatch");
+            let array_ref: &mut [u8; N] = self
+                .alloc
+                .as_mut_slice()
+                .try_into()
+                .expect("allocation size mismatch");
             Ok(ExposeGuardMut::unguarded(array_ref))
         }
     }
@@ -194,7 +218,10 @@ impl<const N: usize> fmt::Debug for ShroudedArray<N> {
 impl<const N: usize> PartialEq for ShroudedArray<N> {
     fn eq(&self, other: &Self) -> bool {
         use subtle::ConstantTimeEq;
-        self.expose().as_slice().ct_eq(other.expose().as_slice()).into()
+        self.expose()
+            .as_slice()
+            .ct_eq(other.expose().as_slice())
+            .into()
     }
 }
 

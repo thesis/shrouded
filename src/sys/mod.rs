@@ -1,14 +1,14 @@
 //! Platform-specific memory protection implementations.
 
-use core::sync::atomic::{AtomicBool, Ordering};
 use crate::error::Result;
 use crate::policy::Policy;
+use core::sync::atomic::{AtomicBool, Ordering};
 
+mod fallback;
 #[cfg(unix)]
 mod unix;
 #[cfg(windows)]
 mod windows;
-mod fallback;
 
 /// Page size for the current platform.
 #[allow(dead_code)]

@@ -1,10 +1,12 @@
 //! UTF-8 string with protected storage.
 
-use core::fmt;
+use crate::alloc::ProtectedAlloc;
 use crate::error::{Result, ShroudError};
 use crate::policy::Policy;
-use crate::traits::{Expose, ExposeGuard, ExposeGuardMut, ExposeGuarded, ExposeGuardedMut, ExposeMut};
-use crate::alloc::ProtectedAlloc;
+use crate::traits::{
+    Expose, ExposeGuard, ExposeGuardMut, ExposeGuarded, ExposeGuardedMut, ExposeMut,
+};
+use core::fmt;
 
 /// A UTF-8 string stored in protected memory.
 ///
@@ -93,6 +95,7 @@ impl ShroudedString {
     /// let secret = ShroudedString::from_str("password").unwrap();
     /// assert_eq!(secret.expose(), "password");
     /// ```
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(source: &str) -> Result<Self> {
         Self::from_str_with_policy(source, Policy::default())
     }
@@ -142,7 +145,9 @@ impl ShroudedString {
             return Err(crate::error::ShroudError::RegionLocked);
         }
         let mut alloc = ProtectedAlloc::new(self.len, self.policy)?;
-        alloc.as_mut_slice().copy_from_slice(&self.alloc.as_slice()[..self.len]);
+        alloc
+            .as_mut_slice()
+            .copy_from_slice(&self.alloc.as_slice()[..self.len]);
         Ok(Self {
             alloc,
             len: self.len,
@@ -260,6 +265,14 @@ impl TryFrom<&str> for ShroudedString {
     }
 }
 
+impl core::str::FromStr for ShroudedString {
+    type Err = ShroudError;
+
+    fn from_str(s: &str) -> Result<Self> {
+        Self::from_str_with_policy(s, Policy::default())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -324,10 +337,7 @@ mod tests {
         // try_clone must return Err, not bypass protection
         let result = secret.try_clone();
         assert!(result.is_err());
-        assert!(matches!(
-            result.unwrap_err(),
-            ShroudError::RegionLocked
-        ));
+        assert!(matches!(result.unwrap_err(), ShroudError::RegionLocked));
     }
 
     #[test]

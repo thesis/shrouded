@@ -1,12 +1,14 @@
 //! Generic protected box for any Zeroize type.
 
-use core::fmt;
-use core::mem;
-use zeroize::Zeroize;
 use crate::alloc::ProtectedAlloc;
 use crate::error::{Result, ShroudError};
 use crate::policy::Policy;
-use crate::traits::{Expose, ExposeGuard, ExposeGuardMut, ExposeGuarded, ExposeGuardedMut, ExposeMut};
+use crate::traits::{
+    Expose, ExposeGuard, ExposeGuardMut, ExposeGuarded, ExposeGuardedMut, ExposeMut,
+};
+use core::fmt;
+use core::mem;
+use zeroize::Zeroize;
 
 /// A generic protected box for any type implementing `Zeroize`.
 ///

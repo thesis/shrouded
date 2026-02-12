@@ -1,14 +1,13 @@
 //! Windows implementation using VirtualAlloc, VirtualLock, and VirtualProtect.
 
+use super::{MemoryRegion, Protection};
 use crate::error::{Result, ShroudError};
 use crate::policy::Policy;
-use super::{MemoryRegion, Protection};
 
 use windows_sys::Win32::Foundation::GetLastError;
 use windows_sys::Win32::System::Memory::{
-    VirtualAlloc, VirtualFree, VirtualLock, VirtualProtect, VirtualUnlock,
-    MEM_COMMIT, MEM_RELEASE, MEM_RESERVE,
-    PAGE_NOACCESS, PAGE_READONLY, PAGE_READWRITE,
+    VirtualAlloc, VirtualFree, VirtualLock, VirtualProtect, VirtualUnlock, MEM_COMMIT, MEM_RELEASE,
+    MEM_RESERVE, PAGE_NOACCESS, PAGE_READONLY, PAGE_READWRITE,
 };
 use windows_sys::Win32::System::SystemInformation::{GetSystemInfo, SYSTEM_INFO};
 
@@ -41,7 +40,10 @@ pub fn allocate_aligned(size: usize, alignment: usize, policy: Policy) -> Result
     let page_sz = page_size();
 
     // Validate alignment
-    debug_assert!(alignment.is_power_of_two(), "alignment must be a power of 2");
+    debug_assert!(
+        alignment.is_power_of_two(),
+        "alignment must be a power of 2"
+    );
     debug_assert!(
         alignment <= page_sz,
         "alignment ({}) cannot exceed page size ({})",
@@ -70,9 +72,7 @@ pub fn allocate_aligned(size: usize, alignment: usize, policy: Policy) -> Result
     let total_size = guard_size
         .checked_add(data_pages)
         .and_then(|s| s.checked_add(guard_size))
-        .ok_or_else(|| ShroudError::AllocationFailed(
-            "size calculation overflow".to_string()
-        ))?;
+        .ok_or_else(|| ShroudError::AllocationFailed("size calculation overflow".to_string()))?;
 
     // Allocate memory with VirtualAlloc
     let alloc_ptr = unsafe {
@@ -106,7 +106,8 @@ pub fn allocate_aligned(size: usize, alignment: usize, policy: Policy) -> Result
     let has_guard_pages = if use_guard_pages {
         let leading_guard_ok = set_protection(alloc_ptr, page_sz, Protection::None).is_ok();
         let trailing_guard_ptr = unsafe { alloc_ptr.add(guard_size + data_pages) };
-        let trailing_guard_ok = set_protection(trailing_guard_ptr, page_sz, Protection::None).is_ok();
+        let trailing_guard_ok =
+            set_protection(trailing_guard_ptr, page_sz, Protection::None).is_ok();
 
         if policy.is_strict() && (!leading_guard_ok || !trailing_guard_ok) {
             // Clean up and return error

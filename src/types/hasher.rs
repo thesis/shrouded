@@ -379,7 +379,9 @@ mod sha256_tests {
 
     #[test]
     fn test_compare_standard_various_lengths() {
-        for len in [1, 2, 31, 32, 33, 55, 56, 57, 63, 64, 65, 100, 128, 256, 512, 1000] {
+        for len in [
+            1, 2, 31, 32, 33, 55, 56, 57, 63, 64, 65, 100, 128, 256, 512, 1000,
+        ] {
             let input: Vec<u8> = (0..len).map(|i| (i % 256) as u8).collect();
             super::test_utils::compare_with_standard::<sha2::Sha256>(&input);
         }
@@ -421,7 +423,7 @@ mod sha256_tests {
     #[test]
     fn test_incremental_single_bytes() {
         let input = b"hello world";
-        let chunks: Vec<&[u8]> = input.iter().map(|b| std::slice::from_ref(b)).collect();
+        let chunks: Vec<&[u8]> = input.iter().map(std::slice::from_ref).collect();
         super::test_utils::compare_incremental_vs_single::<sha2::Sha256>(&chunks);
     }
 
@@ -462,8 +464,14 @@ mod sha256_tests {
         let h2 = hasher.finalize_reset_array::<32>().unwrap();
 
         // Verify both are correct independent hashes
-        assert_eq!(hex::encode(h1.expose()), hex::encode(sha2::Sha256::digest(b"first")));
-        assert_eq!(hex::encode(h2.expose()), hex::encode(sha2::Sha256::digest(b"second")));
+        assert_eq!(
+            hex::encode(h1.expose()),
+            hex::encode(sha2::Sha256::digest(b"first"))
+        );
+        assert_eq!(
+            hex::encode(h2.expose()),
+            hex::encode(sha2::Sha256::digest(b"second"))
+        );
     }
 
     #[test]
@@ -476,7 +484,12 @@ mod sha256_tests {
             let hash = hasher.finalize_reset().unwrap();
 
             let expected = sha2::Sha256::digest(input.as_bytes());
-            assert_eq!(hash.expose(), expected.as_slice(), "Mismatch at iteration {}", i);
+            assert_eq!(
+                hash.expose(),
+                expected.as_slice(),
+                "Mismatch at iteration {}",
+                i
+            );
         }
     }
 
@@ -764,7 +777,9 @@ mod sha1_tests {
 
     #[test]
     fn test_compare_standard_various_lengths() {
-        for len in [1, 2, 31, 32, 33, 55, 56, 57, 63, 64, 65, 100, 128, 256, 512, 1000] {
+        for len in [
+            1, 2, 31, 32, 33, 55, 56, 57, 63, 64, 65, 100, 128, 256, 512, 1000,
+        ] {
             let input: Vec<u8> = (0..len).map(|i| (i % 256) as u8).collect();
             super::test_utils::compare_with_standard::<sha1::Sha1>(&input);
         }
@@ -782,7 +797,7 @@ mod sha1_tests {
     #[test]
     fn test_incremental_single_bytes() {
         let input = b"hello world";
-        let chunks: Vec<&[u8]> = input.iter().map(|b| std::slice::from_ref(b)).collect();
+        let chunks: Vec<&[u8]> = input.iter().map(std::slice::from_ref).collect();
         super::test_utils::compare_incremental_vs_single::<sha1::Sha1>(&chunks);
     }
 
@@ -810,7 +825,12 @@ mod sha1_tests {
             let hash = hasher.finalize_reset().unwrap();
 
             let expected = sha1::Sha1::digest(input.as_bytes());
-            assert_eq!(hash.expose(), expected.as_slice(), "Mismatch at iteration {}", i);
+            assert_eq!(
+                hash.expose(),
+                expected.as_slice(),
+                "Mismatch at iteration {}",
+                i
+            );
         }
     }
 
@@ -1000,7 +1020,7 @@ mod edge_case_tests {
         for i in 0..10_000u16 {
             let byte = (i % 256) as u8;
             shrouded.update(&[byte]);
-            Digest::update(&mut standard, &[byte]);
+            Digest::update(&mut standard, [byte]);
         }
 
         let actual = shrouded.finalize_reset().unwrap();
@@ -1034,12 +1054,12 @@ mod edge_case_tests {
     fn test_binary_patterns() {
         // Test various binary patterns that might cause issues
         let patterns: Vec<Vec<u8>> = vec![
-            vec![0x00; 100],                    // all zeros
-            vec![0xff; 100],                    // all ones
-            vec![0x80; 100],                    // high bit set
-            vec![0x7f; 100],                    // high bit clear
+            vec![0x00; 100],                     // all zeros
+            vec![0xff; 100],                     // all ones
+            vec![0x80; 100],                     // high bit set
+            vec![0x7f; 100],                     // high bit clear
             (0..256).map(|i| i as u8).collect(), // all byte values
-            vec![0x00, 0xff].repeat(50),        // alternating
+            [0x00, 0xff].repeat(50),             // alternating
         ];
 
         for pattern in patterns {
