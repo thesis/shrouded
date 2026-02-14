@@ -1,15 +1,13 @@
 //! Unix implementation using mmap, mlock, and mprotect.
 
+use super::{MemoryRegion, Protection};
 use crate::error::{Result, ShroudError};
 use crate::policy::Policy;
-use super::{MemoryRegion, Protection};
 
 /// Returns the system page size.
 pub fn page_size() -> usize {
     // SAFETY: sysconf is safe to call
-    unsafe {
-        libc::sysconf(libc::_SC_PAGESIZE) as usize
-    }
+    unsafe { libc::sysconf(libc::_SC_PAGESIZE) as usize }
 }
 
 /// Rounds up to the nearest page boundary.
@@ -33,7 +31,10 @@ pub fn allocate_aligned(size: usize, alignment: usize, policy: Policy) -> Result
     let page_sz = page_size();
 
     // Validate alignment
-    debug_assert!(alignment.is_power_of_two(), "alignment must be a power of 2");
+    debug_assert!(
+        alignment.is_power_of_two(),
+        "alignment must be a power of 2"
+    );
     debug_assert!(
         alignment <= page_sz,
         "alignment ({}) cannot exceed page size ({})",
@@ -62,9 +63,7 @@ pub fn allocate_aligned(size: usize, alignment: usize, policy: Policy) -> Result
     let total_size = guard_size
         .checked_add(data_pages)
         .and_then(|s| s.checked_add(guard_size))
-        .ok_or_else(|| ShroudError::AllocationFailed(
-            "size calculation overflow".to_string()
-        ))?;
+        .ok_or_else(|| ShroudError::AllocationFailed("size calculation overflow".to_string()))?;
 
     // Allocate memory with mmap
     // SAFETY: mmap with MAP_ANONYMOUS is safe
@@ -101,7 +100,8 @@ pub fn allocate_aligned(size: usize, alignment: usize, policy: Policy) -> Result
     let has_guard_pages = if use_guard_pages {
         let leading_guard_ok = set_protection(alloc_ptr, page_sz, Protection::None).is_ok();
         let trailing_guard_ptr = unsafe { alloc_ptr.add(guard_size + data_pages) };
-        let trailing_guard_ok = set_protection(trailing_guard_ptr, page_sz, Protection::None).is_ok();
+        let trailing_guard_ok =
+            set_protection(trailing_guard_ptr, page_sz, Protection::None).is_ok();
 
         if policy.is_strict() && (!leading_guard_ok || !trailing_guard_ok) {
             // Clean up and return error
@@ -141,18 +141,18 @@ pub fn allocate_aligned(size: usize, alignment: usize, policy: Policy) -> Result
     {
         // MADV_DONTDUMP = 16 on Linux
         const MADV_DONTDUMP: libc::c_int = 16;
-        let result = unsafe {
-            libc::madvise(data_ptr as *mut libc::c_void, data_pages, MADV_DONTDUMP)
-        };
+        let result =
+            unsafe { libc::madvise(data_ptr as *mut libc::c_void, data_pages, MADV_DONTDUMP) };
         if result != 0 && policy.is_strict() {
             // Clean up and return error
             if is_locked {
                 unsafe { libc::munlock(data_ptr as *const libc::c_void, data_pages) };
             }
             unsafe { libc::munmap(alloc_ptr as *mut libc::c_void, total_size) };
-            return Err(ShroudError::ProtectFailed(
-                format!("MADV_DONTDUMP failed: {}", std::io::Error::last_os_error())
-            ));
+            return Err(ShroudError::ProtectFailed(format!(
+                "MADV_DONTDUMP failed: {}",
+                std::io::Error::last_os_error()
+            )));
         }
     }
 

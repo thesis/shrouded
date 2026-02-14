@@ -8,18 +8,18 @@
 //! - [`Shroud`]: Generic protected box for any `Zeroize` type
 //! - [`ShroudedHasher`]: Hasher with protected internal state (requires `digest` feature)
 
-mod bytes;
-mod string;
 mod array;
 mod boxed;
+mod bytes;
+mod string;
 
 #[cfg(feature = "digest")]
 mod hasher;
 
-pub use bytes::ShroudedBytes;
-pub use string::ShroudedString;
 pub use array::ShroudedArray;
 pub use boxed::Shroud;
+pub use bytes::ShroudedBytes;
+pub use string::ShroudedString;
 
 #[cfg(feature = "digest")]
 pub use hasher::ShroudedHasher;

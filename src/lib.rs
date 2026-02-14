@@ -63,22 +63,22 @@
 //! - No `Clone` impl - must explicitly call `.try_clone()`
 //! - Serde only implements `Deserialize`, never `Serialize`
 
-mod error;
-mod policy;
-mod traits;
 mod alloc;
 mod builder;
-mod types;
+mod error;
+mod policy;
 mod sys;
+mod traits;
+mod types;
 
 #[cfg(feature = "serde")]
 pub mod serde;
 
 // Re-export main types
+pub use builder::ShroudBuilder;
 pub use error::{Result, ShroudError};
 pub use policy::Policy;
 pub use traits::{Expose, ExposeGuard, ExposeGuardMut, ExposeGuarded, ExposeGuardedMut, ExposeMut};
-pub use builder::ShroudBuilder;
 pub use types::{Shroud, ShroudedArray, ShroudedBytes, ShroudedString};
 
 #[cfg(feature = "digest")]
@@ -118,7 +118,8 @@ mod tests {
             for (i, byte) in buf.iter_mut().enumerate() {
                 *byte = i as u8;
             }
-        }).unwrap();
+        })
+        .unwrap();
 
         let expected: [u8; 16] = core::array::from_fn(|i| i as u8);
         assert_eq!(secret.expose(), &expected);
@@ -175,13 +176,17 @@ mod tests {
 
         // Acquire guard, access data, then drop guard
         {
-            let guard = secret.expose_guarded().expect("expose_guarded should succeed");
+            let guard = secret
+                .expose_guarded()
+                .expect("expose_guarded should succeed");
             assert_eq!(&*guard, "guarded_secret");
             // Guard is dropped here, should re-lock memory
         }
 
         // Should be able to acquire guard again
-        let guard2 = secret.expose_guarded().expect("second expose_guarded should succeed");
+        let guard2 = secret
+            .expose_guarded()
+            .expect("second expose_guarded should succeed");
         assert_eq!(&*guard2, "guarded_secret");
     }
 
@@ -191,11 +196,13 @@ mod tests {
         // (since expose() assumes memory is accessible)
         let mut secret = ShroudBuilder::new()
             .policy(Policy::Disabled)
-            .build_bytes(&mut vec![1, 2, 3, 4, 5])
+            .build_bytes(&mut [1, 2, 3, 4, 5])
             .unwrap();
 
         {
-            let mut guard = secret.expose_guarded_mut().expect("expose_guarded_mut should succeed");
+            let mut guard = secret
+                .expose_guarded_mut()
+                .expect("expose_guarded_mut should succeed");
             // Mutate through the guard
             guard[0] = 10;
         }
@@ -211,7 +218,9 @@ mod tests {
             .unwrap();
 
         // With disabled policy, expose_guarded should still work (returns unguarded)
-        let guard = secret.expose_guarded().expect("should succeed even with disabled policy");
+        let guard = secret
+            .expose_guarded()
+            .expect("should succeed even with disabled policy");
         assert_eq!(&*guard, "disabled_policy");
     }
 
@@ -255,7 +264,7 @@ mod tests {
             ShroudBuilder::new()
                 .policy(Policy::Disabled)
                 .build_string("guarded_concurrent".to_string())
-                .unwrap()
+                .unwrap(),
         );
         let mut handles = vec![];
 
@@ -263,7 +272,8 @@ mod tests {
             let secret_clone = Arc::clone(&secret);
             handles.push(thread::spawn(move || {
                 for _ in 0..50 {
-                    let guard = secret_clone.expose_guarded()
+                    let guard = secret_clone
+                        .expose_guarded()
                         .expect("expose_guarded should succeed");
                     assert_eq!(&*guard, "guarded_concurrent");
                 }
@@ -327,8 +337,11 @@ mod tests {
                 // Expected errors: LockFailed (mlock limit), ProtectFailed
                 let err_str = format!("{:?}", e);
                 assert!(
-                    err_str.contains("Lock") || err_str.contains("Protect") || err_str.contains("Allocation"),
-                    "unexpected error: {}", err_str
+                    err_str.contains("Lock")
+                        || err_str.contains("Protect")
+                        || err_str.contains("Allocation"),
+                    "unexpected error: {}",
+                    err_str
                 );
             }
         }
