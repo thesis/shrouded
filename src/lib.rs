@@ -1,3 +1,16 @@
+// Shroud is a low-level secure memory crate — unsafe blocks, raw indexing,
+// and expect/unwrap are inherent to the domain. Suppress workspace lints that
+// don't apply here until the crate is incrementally cleaned up.
+#![allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::indexing_slicing,
+    clippy::undocumented_unsafe_blocks,
+    clippy::multiple_unsafe_ops_per_block,
+    clippy::arithmetic_side_effects,
+    clippy::print_stderr
+)]
+
 //! # Shroud
 //!
 //! Secure memory management with mlock, guard pages, and automatic zeroization.
