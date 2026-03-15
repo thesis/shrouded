@@ -1,11 +1,11 @@
-# shroud
+# shrouded
 
 Secure memory management in Rust with mlock, guard pages, and automatic
 zeroization.
 
 ## Overview
 
-`shroud` provides types for storing secrets in protected memory that is:
+`shrouded` provides types for storing secrets in protected memory that is:
 
 - **Locked to RAM** (`mlock`/`VirtualLock`) to prevent swapping to disk.
 - **Guard-paged** to catch buffer overflows/underflows.
@@ -37,7 +37,7 @@ zeroization.
 ## Usage
 
 ```rust
-use shroud::{ShroudedString, ShroudedBytes, ShroudedArray, Expose};
+use shrouded::{ShroudedString, ShroudedBytes, ShroudedArray, Expose};
 
 // Strings - original is consumed and zeroized
 let password = String::from("hunter2");
@@ -58,7 +58,7 @@ let nonce: ShroudedArray<12> = ShroudedArray::new_with(|buf| {
 
 ## Threat model
 
-### What shroud aims to protect against
+### What shrouded aims to protect against
 
 - **Swap attacks**: Secrets locked to RAM cannot be swapped to disk
 - **Core dump leaks**: Secrets excluded from core dumps on Linux
@@ -69,7 +69,7 @@ let nonce: ShroudedArray<12> = ShroudedArray::new_with(|buf| {
 - **Accidental logging**: Debug output shows `[REDACTED]`
 - **Accidental serialization**: No `Serialize` impl (only `Deserialize`)
 
-### What shroud does NOT protect against
+### What shrouded does NOT protect against
 
 - **Root access**: A privileged attacker can read process memory directly
 - **Memory snapshots**: VM snapshots or hibernation may capture secrets
@@ -79,8 +79,8 @@ let nonce: ShroudedArray<12> = ShroudedArray::new_with(|buf| {
 
 ## Performance
 
-`shroud` prioritizes security over performance. Each allocation uses `mmap` (not
-`malloc`) to obtain page-aligned memory for guard pages, making allocation
+`shrouded` prioritizes security over performance. Each allocation uses `mmap`
+(not `malloc`) to obtain page-aligned memory for guard pages, making allocation
 significantly slower than a normal heap allocation. With guard pages enabled, a
 single-byte secret occupies at least 3 memory pages (~12KB on most systems).
 
@@ -114,12 +114,12 @@ create them in a hot loop, the performance cost is real.
 | Windows    | ✓     | ✓           | ✗                                                                           |
 | WASM/Other | ✗     | ✗           | ✗                                                                           |
 
-On unsupported platforms, `shroud` falls back to standard allocation with
+On unsupported platforms, `shrouded` falls back to standard allocation with
 zeroization on drop.
 
 ## Comparison with similar crates
 
-| Feature                           | shroud      | secrecy            | memsec | secstr        |
+| Feature                           | shrouded    | secrecy            | memsec | secstr        |
 | --------------------------------- | ----------- | ------------------ | ------ | ------------- |
 | Zeroize on drop                   | yes         | yes                | yes    | yes           |
 | `mlock`                           | yes         | no                 | yes    | yes           |

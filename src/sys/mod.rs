@@ -172,7 +172,7 @@ impl MemoryRegion {
                 // Failed to unprotect memory for zeroization.
                 // This is a security concern but we can't do much about it.
                 #[cfg(debug_assertions)]
-                eprintln!("shroud: WARNING - failed to unprotect memory for zeroization");
+                eprintln!("shrouded: WARNING - failed to unprotect memory for zeroization");
                 return;
             }
         }

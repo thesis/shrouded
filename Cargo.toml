@@ -1,11 +1,11 @@
 [package]
-name = "shroud"
+name = "shrouded"
 version = "0.2.0"
 edition = "2021"
 rust-version = "1.77"
 license = "MIT"
 description = "Secure memory management with mlock, guard pages, and automatic zeroization"
-repository = "https://github.com/thesis/shroud"
+repository = "https://github.com/thesis/shrouded"
 categories = ["cryptography", "os"]
 keywords = ["mlock", "zeroize", "guard-pages", "memory-protection"]
 

@@ -36,7 +36,7 @@ use zeroize::Zeroize;
 /// # Example
 ///
 /// ```
-/// use shroud::{Shroud, Expose};
+/// use shrouded::{Shroud, Expose};
 /// use zeroize::Zeroize;
 ///
 /// #[derive(Zeroize)]
@@ -102,7 +102,7 @@ impl<T: Zeroize> Shroud<T> {
     /// # Example
     ///
     /// ```
-    /// use shroud::Shroud;
+    /// use shrouded::Shroud;
     /// use zeroize::Zeroize;
     ///
     /// #[derive(Zeroize, Default)]

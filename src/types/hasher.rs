@@ -29,7 +29,7 @@ use crate::types::{ShroudedArray, ShroudedBytes};
 /// # Example
 ///
 /// ```ignore
-/// use shroud::{ShroudedSha256, Expose};
+/// use shrouded::{ShroudedSha256, Expose};
 ///
 /// let mut hasher = ShroudedSha256::new().unwrap();
 /// hasher.update(b"hello world");

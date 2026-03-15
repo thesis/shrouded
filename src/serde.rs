@@ -10,18 +10,18 @@
 //!
 //! ```toml
 //! [dependencies]
-//! shroud = { version = "0.1", features = ["serde"] }
+//! shrouded = { version = "0.1", features = ["serde"] }
 //! ```
 //!
 //! # Example
 //!
 //! ```ignore
-//! use shroud::ShroudedString;
+//! use shrouded::ShroudedString;
 //! use serde::Deserialize;
 //!
 //! #[derive(Deserialize)]
 //! struct Config {
-//!     #[serde(deserialize_with = "shroud::serde::deserialize_string")]
+//!     #[serde(deserialize_with = "shrouded::serde::deserialize_string")]
 //!     api_key: ShroudedString,
 //! }
 //! ```
@@ -31,7 +31,7 @@ use serde::de::{self, Deserialize, Deserializer, Visitor};
 
 /// Deserializes a `ShroudedString` from a string value.
 ///
-/// Use with `#[serde(deserialize_with = "shroud::serde::deserialize_string")]`
+/// Use with `#[serde(deserialize_with = "shrouded::serde::deserialize_string")]`
 pub fn deserialize_string<'de, D>(deserializer: D) -> Result<ShroudedString, D::Error>
 where
     D: Deserializer<'de>,
@@ -59,7 +59,7 @@ where
 
 /// Deserializes a `ShroudedBytes` from a string (for JSON compatibility).
 ///
-/// Use with `#[serde(deserialize_with = "shroud::serde::deserialize_bytes")]`
+/// Use with `#[serde(deserialize_with = "shrouded::serde::deserialize_bytes")]`
 pub fn deserialize_bytes<'de, D>(deserializer: D) -> Result<ShroudedBytes, D::Error>
 where
     D: Deserializer<'de>,
