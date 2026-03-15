@@ -15,7 +15,7 @@
 //!
 //! Secure memory management with mlock, guard pages, and automatic zeroization.
 //!
-//! `shroud` provides types for storing secrets in protected memory that is:
+//! `shrouded` provides types for storing secrets in protected memory that is:
 //! - **Locked to RAM** (mlock/VirtualLock) to prevent swapping to disk
 //! - **Guard-paged** to catch buffer overflows/underflows
 //! - **Excluded from core dumps** (MADV_DONTDUMP on Linux)
@@ -24,7 +24,7 @@
 //! ## Quick Start
 //!
 //! ```
-//! use shroud::{ShroudedString, Expose};
+//! use shrouded::{ShroudedString, Expose};
 //!
 //! // Create a protected secret from a String (original is zeroized)
 //! let password = String::from("hunter2");
@@ -52,7 +52,7 @@
 //! - `Disabled`: Skip protection (still zeroizes on drop)
 //!
 //! ```
-//! use shroud::{ShroudBuilder, Policy};
+//! use shrouded::{ShroudBuilder, Policy};
 //!
 //! let mut key = [0x42u8; 32];
 //! let secret = ShroudBuilder::new()

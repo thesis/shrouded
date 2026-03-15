@@ -19,7 +19,7 @@ use core::fmt;
 /// # Example
 ///
 /// ```
-/// use shroud::{ShroudedBytes, Expose};
+/// use shrouded::{ShroudedBytes, Expose};
 ///
 /// // Create from a slice (source is zeroized)
 /// let mut key_data = vec![0x42u8; 32];
@@ -60,7 +60,7 @@ impl ShroudedBytes {
     /// # Example
     ///
     /// ```
-    /// use shroud::ShroudedBytes;
+    /// use shrouded::ShroudedBytes;
     ///
     /// let secret = ShroudedBytes::new_with(32, |buf| {
     ///     // Initialize with some pattern

@@ -19,7 +19,7 @@ use core::fmt;
 /// # Example
 ///
 /// ```
-/// use shroud::{ShroudedString, Expose};
+/// use shrouded::{ShroudedString, Expose};
 ///
 /// // Create from a String (consumes and zeroizes the original)
 /// let password = String::from("hunter2");
@@ -89,7 +89,7 @@ impl ShroudedString {
     /// # Example
     ///
     /// ```
-    /// use shroud::{ShroudedString, Expose};
+    /// use shrouded::{ShroudedString, Expose};
     ///
     /// // Copy from a &str without intermediate allocation
     /// let secret = ShroudedString::from_str("password").unwrap();

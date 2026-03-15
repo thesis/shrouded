@@ -1,4 +1,4 @@
-//! Error types for the shroud crate.
+//! Error types for the shrouded crate.
 
 use thiserror::Error;
 
@@ -46,5 +46,5 @@ pub enum ShroudError {
     SystemError { code: i32, message: String },
 }
 
-/// Result type alias for shroud operations.
+/// Result type alias for shrouded operations.
 pub type Result<T> = core::result::Result<T, ShroudError>;

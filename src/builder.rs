@@ -9,7 +9,7 @@ use crate::types::{ShroudedArray, ShroudedBytes, ShroudedString};
 /// # Example
 ///
 /// ```
-/// use shroud::{ShroudBuilder, Policy, Expose};
+/// use shrouded::{ShroudBuilder, Policy, Expose};
 ///
 /// let mut data = vec![0x42u8; 32];
 /// let secret = ShroudBuilder::new()

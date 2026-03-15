@@ -19,7 +19,7 @@ use core::fmt;
 /// # Example
 ///
 /// ```
-/// use shroud::{ShroudedArray, Expose};
+/// use shrouded::{ShroudedArray, Expose};
 ///
 /// // Create a 32-byte secret key
 /// let key: ShroudedArray<32> = ShroudedArray::new_with(|buf| {
@@ -64,7 +64,7 @@ impl<const N: usize> ShroudedArray<N> {
     /// # Example
     ///
     /// ```
-    /// use shroud::ShroudedArray;
+    /// use shrouded::ShroudedArray;
     ///
     /// let key: ShroudedArray<16> = ShroudedArray::new_with(|buf| {
     ///     for (i, byte) in buf.iter_mut().enumerate() {
