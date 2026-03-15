@@ -245,7 +245,3 @@ Some behaviors may be surprising if you're used to standard Rust types:
 5. **`try_clone()` allocates new protected memory**: Each clone gets its own mlock'd region with guard pages. This is intentional for security but has performance implications.
 
 6. **Source data is zeroized**: When creating a `ShroudedString` from a `String`, the original `String` is zeroized. The data now lives only in protected memory.
-
-## License
-
-MIT
