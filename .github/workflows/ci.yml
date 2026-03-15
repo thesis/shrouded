@@ -18,6 +18,12 @@ jobs:
           components: rustfmt
       - run: cargo fmt --check
 
+  prettier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx prettier@latest --check "**/*.md"
+
   clippy:
     runs-on: ubuntu-latest
     steps:
@@ -56,7 +62,7 @@ jobs:
 
   ci-pass:
     if: always()
-    needs: [fmt, clippy, test, msrv, deny]
+    needs: [fmt, prettier, clippy, test, msrv, deny]
     runs-on: ubuntu-latest
     steps:
       - name: Decide whether all jobs passed
