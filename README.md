@@ -1,15 +1,15 @@
 # shroud
 
-Secure memory management with mlock, guard pages, and automatic zeroization.
+Secure memory management in Rust with mlock, guard pages, and automatic zeroization.
 
 ## Overview
 
 `shroud` provides types for storing secrets in protected memory that is:
 
-- **Locked to RAM** (`mlock`/`VirtualLock`) to prevent swapping to disk
-- **Guard-paged** to catch buffer overflows/underflows
-- **Excluded from core dumps** (`MADV_DONTDUMP` on Linux)
-- **Automatically zeroized** on drop using volatile writes
+- **Locked to RAM** (`mlock`/`VirtualLock`) to prevent swapping to disk.
+- **Guard-paged** to catch buffer overflows/underflows.
+- **Excluded from core dumps** to avoid writes to disk.
+- **Automatically zeroized** on drop using volatile writes to minimize exposure.
 
 ## Design Goals
 
@@ -83,7 +83,7 @@ let hash2 = hasher.finalize_reset_array::<32>().unwrap();
 
 ### Security Note
 
-SHA-1 is cryptographically broken and should only be used for legacy compatibility (e.g., HIBP k-anonymity API). Use SHA-256 or stronger for new designs.
+SHA-1 is cryptographically broken and should only be used for legacy compatibility (e.g., [HIBP k-anonymity API](https://haveibeenpwned.com/api/v3)). Use SHA-256 or stronger for new designs.
 
 When calling `finalize_reset()`, the hash output is briefly on the stack before being copied to protected memory. The temporary is zeroized immediately after copying.
 
@@ -143,7 +143,7 @@ let secret = ShroudBuilder::new()
 
 | Platform | mlock | Guard Pages | Core Dump Exclusion |
 |----------|-------|-------------|---------------------|
-| Linux | ✓ | ✓ | ✓ (`MADV_DONTDUMP`) |
+| Linux | ✓ | ✓ | ✓ ([`MADV_DONTDUMP`](https://man7.org/linux/man-pages/man2/madvise.2.html)) |
 | macOS | ✓ | ✓ | ✗ |
 | Windows | ✓ | ✓ | ✗ |
 | WASM/Other | ✗ | ✗ | ✗ |
@@ -171,7 +171,7 @@ The `secstr` crate is commonly used for protected memory (e.g., by the `keepass`
 | Feature | shroud | secstr |
 |---------|--------|--------|
 | mlock (prevent swap) | ✓ | ✓ |
-| Guard pages (PROT_NONE) | ✓ | ✗ |
+| Guard pages ([`PROT_NONE`](https://man7.org/linux/man-pages/man2/mprotect.2.html)) | ✓ | ✗ |
 | mprotect (read/write control) | ✓ | ✗ |
 | Core dump exclusion | ✓ | ✓ |
 | Zeroing on drop | ✓ | ✓ |
@@ -226,7 +226,7 @@ Some behaviors may be surprising if you're used to standard Rust types:
 
    - `expose()` is **infallible** because it returns a direct reference without changing memory permissions. Memory is allocated with read/write access by default.
 
-   - `expose_guarded()` **returns `Result`** because it must call `mprotect()` to change permissions from PROT_NONE to readable, then back to PROT_NONE when the guard is dropped. System calls can fail.
+   - `expose_guarded()` **returns `Result`** because it must call [`mprotect()`](https://man7.org/linux/man-pages/man2/mprotect.2.html) to change permissions from PROT_NONE to readable, then back to PROT_NONE when the guard is dropped. System calls can fail.
 
    ```rust
    // Quick access (memory stays accessible)
