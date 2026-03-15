@@ -21,6 +21,8 @@ zeroization.
 3. **Defense in depth**: Multiple layers of protection (mlock + guard pages +
    zeroization)
 4. **Explicit operations**: No automatic `Clone`, `Display`, or `Serialize`
+5. **Configurable policy**: Choose strict, best-effort, or disabled memory
+   protection per allocation
 
 ## Types
 
@@ -52,29 +54,6 @@ let nonce: ShroudedArray<12> = ShroudedArray::new_with(|buf| {
     // Initialize directly in protected memory
     getrandom::getrandom(buf).unwrap();
 }).unwrap();
-```
-
-## Policy
-
-Control how memory protection failures are handled:
-
-```rust
-use shroud::{ShroudBuilder, Policy};
-
-// BestEffort (default): Attempt protection, fall back gracefully
-let secret = ShroudBuilder::new()
-    .policy(Policy::BestEffort)
-    .build_string("secret".to_string())?;
-
-// Strict: Error if protection fails
-let secret = ShroudBuilder::new()
-    .policy(Policy::Strict)
-    .build_string("secret".to_string())?;
-
-// Disabled: No protection (still zeroizes on drop)
-let secret = ShroudBuilder::new()
-    .policy(Policy::Disabled)
-    .build_string("secret".to_string())?;
 ```
 
 ## Threat model
