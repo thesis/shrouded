@@ -50,43 +50,6 @@ let nonce: ShroudedArray<12> = ShroudedArray::new_with(|buf| {
 }).unwrap();
 ```
 
-## Protected Hashing
-
-The `ShroudedHasher<D>` type keeps hasher internal state in protected memory, useful when hashing sensitive data like passwords. Enable with the `sha1` or `sha2` features.
-
-```rust
-use shroud::{ShroudedSha256, Expose};
-
-// Create a protected hasher
-let mut hasher = ShroudedSha256::new().unwrap();
-
-// Hash sensitive data - hasher state is in protected memory
-hasher.update(b"sensitive password");
-
-// Get the hash in protected memory
-let hash = hasher.finalize_reset_array::<32>().unwrap();
-println!("Hash: {}", hex::encode(hash.expose()));
-
-// Hasher is automatically reset and can be reused
-hasher.update(b"another password");
-let hash2 = hasher.finalize_reset_array::<32>().unwrap();
-```
-
-### Available Hashers
-
-| Type | Feature | Output Size |
-|------|---------|-------------|
-| `ShroudedSha1` | `sha1` | 20 bytes |
-| `ShroudedSha256` | `sha2` | 32 bytes |
-| `ShroudedSha384` | `sha2` | 48 bytes |
-| `ShroudedSha512` | `sha2` | 64 bytes |
-
-### Security Note
-
-SHA-1 is cryptographically broken and should only be used for legacy compatibility (e.g., [HIBP k-anonymity API](https://haveibeenpwned.com/api/v3)). Use SHA-256 or stronger for new designs.
-
-When calling `finalize_reset()`, the hash output is briefly on the stack before being copied to protected memory. The temporary is zeroized immediately after copying.
-
 ## Policy
 
 Control how memory protection failures are handled:
