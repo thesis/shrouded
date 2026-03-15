@@ -1,36 +1,34 @@
 [package]
 name = "shroud"
-version = "0.1.0"
-edition.workspace = true
-rust-version.workspace = true
+version = "0.2.0"
+edition = "2021"
+rust-version = "1.77"
 license = "MIT"
 description = "Secure memory management with mlock, guard pages, and automatic zeroization"
+repository = "https://github.com/thesis/shroud"
+categories = ["cryptography", "os"]
+keywords = ["mlock", "zeroize", "guard-pages", "memory-protection"]
 
 [dependencies]
-zeroize.workspace = true
-thiserror.workspace = true
+zeroize = { version = "1.7", features = ["derive"] }
+thiserror = "1.0"
 subtle = "2.5"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.52", features = ["Win32_System_Memory", "Win32_Foundation", "Win32_System_SystemInformation"] }
+windows-sys = { version = "0.52", features = [
+    "Win32_System_Memory",
+    "Win32_Foundation",
+    "Win32_System_SystemInformation",
+] }
 
 [dependencies.serde]
 version = "1.0"
 optional = true
 default-features = false
 features = ["derive"]
-
-[features]
-default = ["mlock", "guard-pages"]
-mlock = []
-guard-pages = []
-serde = ["dep:serde"]
-digest = ["dep:digest"]
-sha1 = ["digest", "dep:sha1"]
-sha2 = ["digest", "dep:sha2"]
 
 [dependencies.digest]
 version = "0.10"
@@ -44,8 +42,26 @@ optional = true
 version = "0.10"
 optional = true
 
-[lints]
-workspace = true
+[features]
+default = ["mlock", "guard-pages"]
+mlock = []
+guard-pages = []
+serde = ["dep:serde"]
+digest = ["dep:digest"]
+sha1 = ["digest", "dep:sha1"]
+sha2 = ["digest", "dep:sha2"]
+
+[lints.clippy]
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+indexing_slicing = "warn"
+undocumented_unsafe_blocks = "warn"
+multiple_unsafe_ops_per_block = "warn"
+dbg_macro = "warn"
+print_stdout = "warn"
+print_stderr = "warn"
+arithmetic_side_effects = "warn"
 
 [dev-dependencies]
 tempfile = "3"
