@@ -5,8 +5,14 @@
 [![CI](https://img.shields.io/github/actions/workflow/status/thesis/shrouded/ci.yml?branch=main&label=CI)](https://github.com/thesis/shrouded/actions/workflows/ci.yml)
 [![MSRV](https://img.shields.io/badge/MSRV-1.77-blue)](https://github.com/thesis/shrouded)
 
-Secure memory management in Rust with mlock, guard pages, and automatic
-zeroization.
+> It is my eternal curse, that each thing I learn sloughs off me.
+
+— Adrian Tchaikovsky,
+[Shroud](<https://en.wikipedia.org/wiki/Shroud_(Tchaikovsky_novel)>)
+
+`shrouded` provides secure memory management in Rust for the paranoid. Built
+with `mlock`, guard pages, automatic zeroization, and a healthy dose of
+humility.
 
 ## Overview
 
