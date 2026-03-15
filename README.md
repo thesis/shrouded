@@ -167,6 +167,8 @@ On unsupported platforms, `shroud` falls back to standard allocation with zeroiz
 | Fixed-size array type | yes | no | yes | no |
 | Windows (no libsodium) | yes | yes | no | yes |
 
+Migrating from another crate? See the [migration guide](docs/migration.md).
+
 ## Usage Notes
 
 Some behaviors may be surprising if you're used to standard Rust types:
