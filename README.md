@@ -13,9 +13,22 @@ zeroization.
 `shrouded` provides types for storing secrets in protected memory that is:
 
 - **Locked to RAM** (`mlock`/`VirtualLock`) to prevent swapping to disk.
+  - _Why?_ See the
+    [KeePass password dump (2023)](https://github.com/vdohney/keepass-password-dumper)
+    and
+    [cold-boot attacks](https://www.usenix.org/legacy/event/sec08/tech/full_papers/halderman/halderman.pdf).
 - **Guard-paged** to catch buffer overflows/underflows.
+  - _Why?_ See [Heartbleed (2014)](https://www.heartbleed.com/) and
+    [Cloudbleed (2017)](https://blog.cloudflare.com/quantifying-the-impact-of-cloudbleed/)
 - **Excluded from core dumps** to avoid writes to disk.
-- **Automatically zeroized** on drop using volatile writes to minimize exposure.
+  - _Why?_ See
+    [Storm-0558 (2023)](https://msrc.microsoft.com/blog/2023/09/results-of-major-technical-investigations-for-storm-0558-key-acquisition/)
+    and [Bitcoin Core (2019)](https://github.com/bitcoin/bitcoin/pull/15600).
+- **Automatically zeroized** on drop using volatile writes and never logged.
+  - _Why?_ See
+    [Facebook (2019)](https://krebsonsecurity.com/2019/03/facebook-stored-hundreds-of-millions-of-user-passwords-in-plain-text-for-years/)
+    and
+    [Github (2018)](https://www.bleepingcomputer.com/news/security/github-accidentally-recorded-some-plaintext-passwords-in-its-internal-logs/).
 
 ## Design goals
 
