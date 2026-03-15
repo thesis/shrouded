@@ -1,5 +1,10 @@
 # shrouded
 
+[![crates.io](https://img.shields.io/crates/v/shrouded)](https://crates.io/crates/shrouded)
+[![docs.rs](https://img.shields.io/docsrs/shrouded)](https://docs.rs/shrouded)
+[![CI](https://img.shields.io/github/actions/workflow/status/thesis/shrouded/ci.yml?branch=main&label=CI)](https://github.com/thesis/shrouded/actions/workflows/ci.yml)
+[![MSRV](https://img.shields.io/badge/MSRV-1.77-blue)](https://github.com/thesis/shrouded)
+
 Secure memory management in Rust with mlock, guard pages, and automatic
 zeroization.
 
