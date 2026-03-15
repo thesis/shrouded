@@ -150,69 +150,22 @@ let secret = ShroudBuilder::new()
 
 On unsupported platforms, `shroud` falls back to standard allocation with zeroization on drop.
 
-## Comparison with Similar Crates
+## Comparison with similar crates
 
-| Feature | shroud | secrecy | memsec |
-|---------|--------|---------|--------|
-| Zeroize on drop | ✓ | ✓ | ✓ |
-| mlock | ✓ | ✗ | ✓ |
-| Guard pages | ✓ | ✗ | ✓ |
-| Expose API | ✓ | ✓ | ✗ |
-| Policy control | ✓ | ✗ | ✗ |
-| Debug redaction | ✓ | ✓ | ✗ |
-| No Serialize | ✓ | ✓ | N/A |
-
-### Detailed Comparison: shroud vs secstr
-
-The `secstr` crate is commonly used for protected memory (e.g., by the `keepass` crate). Here's how it compares:
-
-#### Memory Protection
-
-| Feature | shroud | secstr |
-|---------|--------|--------|
-| mlock (prevent swap) | ✓ | ✓ |
-| Guard pages ([`PROT_NONE`](https://man7.org/linux/man-pages/man2/mprotect.2.html)) | ✓ | ✗ |
-| mprotect (read/write control) | ✓ | ✗ |
-| Core dump exclusion | ✓ | ✓ |
-| Zeroing on drop | ✓ | ✓ |
-| Auto re-lock after access | ✓ (`ExposeGuard`) | ✗ |
-
-#### API & Types
-
-| Aspect | shroud | secstr |
-|--------|--------|--------|
-| String type | `ShroudedString` | `SecStr` |
-| Bytes type | `ShroudedBytes` | `SecVec` |
-| Fixed-size array | `ShroudedArray<N>` | ✗ |
-| Generic wrapper | `Shroud<T>` | ✗ |
-| Access pattern | `.expose()` | `.unsecure()` |
-| Guarded access | `.expose_guarded()` | ✗ |
-| Cloning | `.try_clone()` (explicit) | Not Clone |
-
-#### Error Handling
-
-| Aspect | shroud | secstr |
-|--------|--------|--------|
-| Policy control | `BestEffort` / `Strict` / `Disabled` | None (silent fallback) |
-| mlock failure | Configurable | Silent fallback |
-
-#### Pros & Cons
-
-**shroud:**
-- ✅ Guard pages detect buffer overflows
-- ✅ Auto re-locking via `ExposeGuard`
-- ✅ Per-allocation policy control
-- ✅ Native Windows support (no libsodium dependency)
-- ❌ More complex API
-- ❌ Higher memory overhead (guard pages)
-
-**secstr:**
-- ✅ Simple API
-- ✅ Lower overhead
-- ✅ Mature, battle-tested
-- ❌ No guard pages
-- ❌ No automatic re-locking
-- ❌ Silent failures on mlock errors
+| Feature | shroud | secrecy | memsec | secstr |
+|---------|--------|---------|--------|--------|
+| Zeroize on drop | yes | yes | yes | yes |
+| mlock | yes | no | yes | yes |
+| Guard pages | yes | no | yes | no |
+| mprotect (re-lock after access) | yes | no | no | no |
+| Core dump exclusion | yes | no | no | yes |
+| Expose-style API | `.expose()` | `.expose_secret()` | — | `.unsecure()` |
+| Policy control | yes | no | no | no |
+| Debug redaction | yes | yes | no | no |
+| No implicit Serialize | yes | yes | N/A | N/A |
+| Optional serde | deser only | ser + deser | no | ser + deser |
+| Fixed-size array type | yes | no | yes | no |
+| Windows (no libsodium) | yes | yes | no | yes |
 
 ## Usage Notes
 
