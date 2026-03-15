@@ -4,13 +4,13 @@
 
 ### Concept mapping
 
-| secrecy | shroud | notes |
-|---------|--------|-------|
-| `Secret<String>` | `ShroudedString` | dedicated type |
-| `Secret<Vec<u8>>` | `ShroudedBytes` | dedicated type |
-| `Secret<T>` | `Shroud<T>` | generic wrapper |
-| `.expose_secret()` | `.expose()` | shorter name |
-| `CloneableSecret` | `.try_clone()` | returns `Result` |
+| secrecy              | shroud                   | notes             |
+| -------------------- | ------------------------ | ----------------- |
+| `Secret<String>`     | `ShroudedString`         | dedicated type    |
+| `Secret<Vec<u8>>`    | `ShroudedBytes`          | dedicated type    |
+| `Secret<T>`          | `Shroud<T>`              | generic wrapper   |
+| `.expose_secret()`   | `.expose()`              | shorter name      |
+| `CloneableSecret`    | `.try_clone()`           | returns `Result`  |
 | `SerializableSecret` | `.expose()` + manual ser | no Serialize impl |
 
 ### Before / after
@@ -35,11 +35,19 @@ let value: &str = password.expose();
 
 ### Behavioral differences
 
-- **Fallible constructors.** `ShroudedString::new()` returns `Result` because memory protection (mlock, guard pages) can fail. `Secret::new()` is infallible.
-- **No Serialize.** secrecy allows opt-in serialization via `SerializableSecret`. shroud has no `Serialize` impl at all — call `.expose()` and serialize the inner value explicitly.
-- **Fallible clone.** `try_clone()` returns `Result` because each clone allocates new protected memory with mlock. secrecy's `Clone` (via `CloneableSecret`) is infallible.
-- **Guarded access.** `expose_guarded()` temporarily unlocks memory via mprotect and re-locks it when the guard is dropped. secrecy has no equivalent.
-- **Extra protections.** shroud adds mlock, guard pages, and core dump exclusion on top of zeroize-on-drop.
+- **Fallible constructors.** `ShroudedString::new()` returns `Result` because
+  memory protection (mlock, guard pages) can fail. `Secret::new()` is
+  infallible.
+- **No Serialize.** secrecy allows opt-in serialization via
+  `SerializableSecret`. shroud has no `Serialize` impl at all — call `.expose()`
+  and serialize the inner value explicitly.
+- **Fallible clone.** `try_clone()` returns `Result` because each clone
+  allocates new protected memory with mlock. secrecy's `Clone` (via
+  `CloneableSecret`) is infallible.
+- **Guarded access.** `expose_guarded()` temporarily unlocks memory via mprotect
+  and re-locks it when the guard is dropped. secrecy has no equivalent.
+- **Extra protections.** shroud adds mlock, guard pages, and core dump exclusion
+  on top of zeroize-on-drop.
 
 ---
 
@@ -47,12 +55,12 @@ let value: &str = password.expose();
 
 ### Concept mapping
 
-| memsec | shroud | notes |
-|--------|--------|-------|
-| `malloc<T>()` + `mlock()` | `Shroud<T>::new()` | lifecycle is automatic |
-| `allocarray<T>(n)` | `ShroudedArray<N>` | fixed-size |
-| raw pointer access | `.expose()` / `.expose_mut()` | safe API |
-| `memzero()` + `munlock()` + `free()` | automatic on `Drop` | |
+| memsec                               | shroud                        | notes                  |
+| ------------------------------------ | ----------------------------- | ---------------------- |
+| `malloc<T>()` + `mlock()`            | `Shroud<T>::new()`            | lifecycle is automatic |
+| `allocarray<T>(n)`                   | `ShroudedArray<N>`            | fixed-size             |
+| raw pointer access                   | `.expose()` / `.expose_mut()` | safe API               |
+| `memzero()` + `munlock()` + `free()` | automatic on `Drop`           |                        |
 
 ### Before / after
 
@@ -85,10 +93,16 @@ let data: &[u8] = secret.expose();
 
 ### Behavioral differences
 
-- **Safe API.** memsec requires `unsafe` for most operations. shroud's public API is entirely safe.
-- **Automatic lifecycle.** shroud manages alloc, mlock, guard pages, zeroize, munlock, and free as a single unit. memsec requires you to call each step manually.
-- **No libsodium.** shroud calls OS APIs (mlock, mprotect, VirtualLock) directly. memsec depends on libsodium on some platforms.
-- **Policy control.** `Policy::Strict` turns protection failures into errors. `Policy::BestEffort` (default) falls back gracefully. memsec operations return `Option` or `bool` with no configurable behavior.
+- **Safe API.** memsec requires `unsafe` for most operations. shroud's public
+  API is entirely safe.
+- **Automatic lifecycle.** shroud manages alloc, mlock, guard pages, zeroize,
+  munlock, and free as a single unit. memsec requires you to call each step
+  manually.
+- **No libsodium.** shroud calls OS APIs (mlock, mprotect, VirtualLock)
+  directly. memsec depends on libsodium on some platforms.
+- **Policy control.** `Policy::Strict` turns protection failures into errors.
+  `Policy::BestEffort` (default) falls back gracefully. memsec operations return
+  `Option` or `bool` with no configurable behavior.
 
 ---
 
@@ -96,14 +110,14 @@ let data: &[u8] = secret.expose();
 
 ### Concept mapping
 
-| secstr | shroud | notes |
-|--------|--------|-------|
-| `SecStr` | `ShroudedString` or `ShroudedBytes` | `SecStr` wraps `Vec<u8>`, not necessarily UTF-8 |
-| `SecVec<T>` | `ShroudedBytes` / `Shroud<T>` | |
-| `.unsecure()` | `.expose()` | |
-| `.unsecure_mut()` | `.expose_mut()` | |
-| `SecStr::from("...")` | `ShroudedString::new(s)` | returns `Result` |
-| `SecStr::new(vec)` | `ShroudedBytes::from_slice(&mut v)` | zeroizes source |
+| secstr                | shroud                              | notes                                           |
+| --------------------- | ----------------------------------- | ----------------------------------------------- |
+| `SecStr`              | `ShroudedString` or `ShroudedBytes` | `SecStr` wraps `Vec<u8>`, not necessarily UTF-8 |
+| `SecVec<T>`           | `ShroudedBytes` / `Shroud<T>`       |                                                 |
+| `.unsecure()`         | `.expose()`                         |                                                 |
+| `.unsecure_mut()`     | `.expose_mut()`                     |                                                 |
+| `SecStr::from("...")` | `ShroudedString::new(s)`            | returns `Result`                                |
+| `SecStr::new(vec)`    | `ShroudedBytes::from_slice(&mut v)` | zeroizes source                                 |
 
 ### Before / after
 
@@ -137,9 +151,15 @@ let value: &[u8] = secret.expose();
 
 ### Behavioral differences
 
-- **Fallible constructors.** shroud returns `Result`; secstr constructors are infallible.
-- **Choose your type.** `SecStr` wraps `Vec<u8>` regardless of content. Use `ShroudedString` for text (UTF-8 validated) or `ShroudedBytes` for raw bytes.
-- **Source zeroization.** `ShroudedBytes::from_slice()` zeroizes the input slice. secstr does not zeroize the source.
-- **Guard pages + mprotect.** shroud adds guard pages around allocations and supports automatic re-locking via `expose_guarded()`. secstr has neither.
-- **Explicit failure handling.** `Policy::Strict` turns mlock failures into errors. secstr silently falls back when mlock fails.
-- **Serde.** secstr supports optional Serialize + Deserialize. shroud supports Deserialize only — serialize by calling `.expose()` on the inner value.
+- **Fallible constructors.** shroud returns `Result`; secstr constructors are
+  infallible.
+- **Choose your type.** `SecStr` wraps `Vec<u8>` regardless of content. Use
+  `ShroudedString` for text (UTF-8 validated) or `ShroudedBytes` for raw bytes.
+- **Source zeroization.** `ShroudedBytes::from_slice()` zeroizes the input
+  slice. secstr does not zeroize the source.
+- **Guard pages + mprotect.** shroud adds guard pages around allocations and
+  supports automatic re-locking via `expose_guarded()`. secstr has neither.
+- **Explicit failure handling.** `Policy::Strict` turns mlock failures into
+  errors. secstr silently falls back when mlock fails.
+- **Serde.** secstr supports optional Serialize + Deserialize. shroud supports
+  Deserialize only — serialize by calling `.expose()` on the inner value.
