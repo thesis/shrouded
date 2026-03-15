@@ -13,8 +13,8 @@ Secure memory management in Rust with mlock, guard pages, and automatic zeroizat
 
 ## Design Goals
 
-1. **Secrecy-style ergonomics**: Simple `.expose()` API to access protected data
-2. **Memsec-level protection**: Platform-specific memory protection with graceful degradation
+1. **`secrecy`-style ergonomics**: Simple `.expose()` API to access protected data
+2. **`memsec`-level protection**: Platform-specific memory protection with graceful degradation
 3. **Defense in depth**: Multiple layers of protection (mlock + guard pages + zeroization)
 4. **Explicit operations**: No automatic `Clone`, `Display`, or `Serialize`
 
@@ -127,6 +127,14 @@ let secret = ShroudBuilder::new()
 - **Memory snapshots**: VM snapshots or hibernation may capture secrets
 - **Side channels**: Timing attacks, speculative execution, etc.
 - **Heap remnants**: For heap types like `Vec`, consider using `ShroudedBytes` directly
+
+## Performance
+
+`shroud` prioritizes security over performance. Each allocation uses `mmap` (not `malloc`) to obtain page-aligned memory for guard pages, making allocation significantly slower than a normal heap allocation. With guard pages enabled, a single-byte secret occupies at least 3 memory pages (~12KB on most systems).
+
+This also affects `mlock` budgets. The kernel limits locked memory per process ([`RLIMIT_MEMLOCK`](https://www.rdocumentation.org/packages/RAppArmor/versions/0.8.3/topics/rlimit_memlock), often 64–256KB by default), and guard pages inflate each allocation's footprint. `expose_guarded()` adds two `mprotect` syscalls per access; `expose()` avoids this at the cost of keeping memory readable between accesses.
+
+We believe these costs are worthwhile in the typical case, handling a handful of API keys or passwords. If you're handling many secrets concurrently, though, or create them in a hot loop, the performance cost is real.
 
 ## Features
 
