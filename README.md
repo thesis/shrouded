@@ -204,3 +204,14 @@ Some behaviors may be surprising if you're used to standard Rust types:
 6. **Source data is zeroized**: When creating a `ShroudedString` from a
    `String`, the original `String` is zeroized. The data now lives only in
    protected memory.
+
+## Contributing
+
+Consider installing the commit hooks before your first commit:
+
+```sh
+git config core.hooksPath .githooks
+```
+
+The pre-commit hook runs `cargo fmt` and `prettier` on Markdown files. You'll
+need [Node.js](https://nodejs.org) available for the latter.
