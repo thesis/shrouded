@@ -11,7 +11,7 @@
     clippy::print_stderr
 )]
 
-//! # Shroud
+//! # Shrouded
 //!
 //! Secure memory management with mlock, guard pages, and automatic zeroization.
 //!
@@ -42,6 +42,7 @@
 //! - [`ShroudedString`]: UTF-8 string with protected storage
 //! - [`ShroudedArray<N>`]: Fixed-size protected array
 //! - [`Shroud<T>`]: Generic protected box for any `Zeroize` type
+//! - `ShroudedHasher<D>`: Hasher with protected internal state (requires `digest` feature)
 //!
 //! ## Policy
 //!
@@ -65,7 +66,10 @@
 //!
 //! - `mlock` (default): Enable memory locking
 //! - `guard-pages` (default): Enable guard pages
-//! - `serde`: Enable deserialize support (never serialize!)
+//! - `serde`: Enable deserialize support
+//! - `digest`: Enable `ShroudedHasher<D>` for custom digest algorithms
+//! - `sha1`: Enable `ShroudedSha1` (includes `digest`)
+//! - `sha2`: Enable `ShroudedSha256`, `ShroudedSha384`, `ShroudedSha512` (includes `digest`)
 //!
 //! ## Security Considerations
 //!

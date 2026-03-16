@@ -10,9 +10,8 @@
 — Adrian Tchaikovsky,
 [Shroud](<https://en.wikipedia.org/wiki/Shroud_(Tchaikovsky_novel)>)
 
-`shrouded` provides secure memory management in Rust for the paranoid. Built
-with `mlock`, guard pages, automatic zeroization, and a healthy dose of
-humility.
+`shrouded` provides secure memory management for the paranoid. Built with
+`mlock`, guard pages, automatic zeroization, and a healthy dose of humility.
 
 ## Overview
 
@@ -44,7 +43,8 @@ humility.
    graceful degradation
 3. **Defense in depth**: Multiple layers of protection (mlock + guard pages +
    zeroization)
-4. **Explicit operations**: No automatic `Clone`, `Display`, or `Serialize`
+4. **Explicit operations**: No automatic `Clone`, `Display`, or `Serialize`.
+   `Debug` prints `[REDACTED]`.
 5. **Configurable policy**: Choose strict, best-effort, or disabled memory
    protection per allocation
 
@@ -124,7 +124,7 @@ create them in a hot loop, the performance cost is real.
 | ------------- | ------- | ------------------------------------------------------------------------------- |
 | `mlock`       | ✓       | Enable memory locking                                                           |
 | `guard-pages` | ✓       | Enable guard pages                                                              |
-| `serde`       | ✗       | Enable deserialize support                                                      |
+| `serde`       | ✗       | Enable deserialize support (never serialize)                                    |
 | `digest`      | ✗       | Enable `ShroudedHasher<D>` for custom digest algorithms                         |
 | `sha1`        | ✗       | Enable `ShroudedSha1` (includes `digest`)                                       |
 | `sha2`        | ✗       | Enable `ShroudedSha256`, `ShroudedSha384`, `ShroudedSha512` (includes `digest`) |
