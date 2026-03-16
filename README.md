@@ -19,9 +19,7 @@
 
 - **Locked to RAM** (`mlock`/`VirtualLock`) to prevent swapping to disk.
   - _Why?_ See the
-    [KeePass password dump (2023)](https://github.com/vdohney/keepass-password-dumper)
-    and
-    [cold-boot attacks](https://www.usenix.org/legacy/event/sec08/tech/full_papers/halderman/halderman.pdf).
+    [KeePass password dump (2023)](https://github.com/vdohney/keepass-password-dumper).
 - **Guard-paged** to catch buffer overflows/underflows.
   - _Why?_ See [Heartbleed (2014)](https://www.heartbleed.com/) and
     [Cloudbleed (2017)](https://blog.cloudflare.com/quantifying-the-impact-of-cloudbleed/)
@@ -31,9 +29,10 @@
     and [Bitcoin Core (2019)](https://github.com/bitcoin/bitcoin/pull/15600).
 - **Automatically zeroized** on drop using volatile writes and never logged.
   - _Why?_ See
-    [Facebook (2019)](https://krebsonsecurity.com/2019/03/facebook-stored-hundreds-of-millions-of-user-passwords-in-plain-text-for-years/)
+    [Facebook (2019)](https://krebsonsecurity.com/2019/03/facebook-stored-hundreds-of-millions-of-user-passwords-in-plain-text-for-years/),
+    [Github (2018)](https://www.bleepingcomputer.com/news/security/github-accidentally-recorded-some-plaintext-passwords-in-its-internal-logs/),
     and
-    [Github (2018)](https://www.bleepingcomputer.com/news/security/github-accidentally-recorded-some-plaintext-passwords-in-its-internal-logs/).
+    [cold-boot attacks](https://www.usenix.org/legacy/event/sec08/tech/full_papers/halderman/halderman.pdf).
 
 ## Design goals
 
