@@ -136,8 +136,8 @@ pub fn allocate_aligned(size: usize, alignment: usize, policy: Policy) -> Result
         false
     };
 
-    // Exclude from core dumps (Linux-specific)
-    #[cfg(target_os = "linux")]
+    // Exclude from core dumps (Linux and Android)
+    #[cfg(any(target_os = "linux", target_os = "android"))]
     {
         // MADV_DONTDUMP = 16 on Linux
         const MADV_DONTDUMP: libc::c_int = 16;
@@ -286,7 +286,7 @@ mod tests {
         }
     }
 
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", target_os = "android"))]
     #[test]
     fn test_mlock_verification() {
         // On Linux, we can verify mlock by checking /proc/self/status
