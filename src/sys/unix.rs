@@ -130,6 +130,13 @@ pub fn allocate_aligned(size: usize, alignment: usize, policy: Policy) -> Result
                 std::io::Error::last_os_error()
             )));
         } else {
+            #[cfg(debug_assertions)]
+            {
+                eprintln!(
+                    "shrouded: mlock failed ({}), continuing without memory locking",
+                    std::io::Error::last_os_error()
+                );
+            }
             false
         }
     } else {
