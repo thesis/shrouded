@@ -1,4 +1,8 @@
 //! Unix implementation using mmap, mlock, and mprotect.
+//!
+//! Covers both Linux and Android (same kernel ABI). On Android,
+//! `RLIMIT_MEMLOCK` is typically 64 KB; the `BestEffort` policy
+//! handles mlock failures gracefully.
 
 use super::{MemoryRegion, Protection};
 use crate::error::{Result, ShroudError};

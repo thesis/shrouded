@@ -21,7 +21,7 @@ pub fn page_size() -> usize {
 /// The returned region will have:
 /// - Memory locked to physical RAM (mlock) if enabled
 /// - Guard pages before and after (if enabled)
-/// - Core dump exclusion (MADV_DONTDUMP on Linux)
+/// - Core dump exclusion (MADV_DONTDUMP on Linux/Android)
 #[allow(dead_code)]
 pub fn allocate(size: usize, policy: Policy) -> Result<MemoryRegion> {
     allocate_aligned(size, 1, policy)
@@ -37,7 +37,7 @@ pub fn allocate(size: usize, policy: Policy) -> Result<MemoryRegion> {
 /// The returned region will have:
 /// - Memory locked to physical RAM (mlock) if enabled
 /// - Guard pages before and after (if enabled)
-/// - Core dump exclusion (MADV_DONTDUMP on Linux)
+/// - Core dump exclusion (MADV_DONTDUMP on Linux/Android)
 /// - Data pointer aligned to the requested alignment
 pub fn allocate_aligned(size: usize, alignment: usize, policy: Policy) -> Result<MemoryRegion> {
     platform_impl::allocate_aligned(size, alignment, policy)
