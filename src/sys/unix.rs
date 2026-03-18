@@ -1,4 +1,8 @@
 //! Unix implementation using mmap, mlock, and mprotect.
+//!
+//! Covers both Linux and Android (same kernel ABI). On Android,
+//! `RLIMIT_MEMLOCK` is typically 64 KB; the `BestEffort` policy
+//! handles mlock failures gracefully.
 
 use super::{MemoryRegion, Protection};
 use crate::error::{Result, ShroudError};
@@ -130,14 +134,21 @@ pub fn allocate_aligned(size: usize, alignment: usize, policy: Policy) -> Result
                 std::io::Error::last_os_error()
             )));
         } else {
+            #[cfg(debug_assertions)]
+            {
+                eprintln!(
+                    "shrouded: mlock failed ({}), continuing without memory locking",
+                    std::io::Error::last_os_error()
+                );
+            }
             false
         }
     } else {
         false
     };
 
-    // Exclude from core dumps (Linux-specific)
-    #[cfg(target_os = "linux")]
+    // Exclude from core dumps (Linux and Android)
+    #[cfg(any(target_os = "linux", target_os = "android"))]
     {
         // MADV_DONTDUMP = 16 on Linux
         const MADV_DONTDUMP: libc::c_int = 16;
@@ -286,7 +297,7 @@ mod tests {
         }
     }
 
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", target_os = "android"))]
     #[test]
     fn test_mlock_verification() {
         // On Linux, we can verify mlock by checking /proc/self/status

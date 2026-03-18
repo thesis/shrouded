@@ -130,15 +130,23 @@ create them in a hot loop, the performance cost is real.
 
 ## Platform support
 
-| Platform   | mlock | Guard Pages | Core Dump Exclusion                                                         |
-| ---------- | ----- | ----------- | --------------------------------------------------------------------------- |
-| Linux      | ✓     | ✓           | ✓ ([`MADV_DONTDUMP`](https://man7.org/linux/man-pages/man2/madvise.2.html)) |
-| macOS      | ✓     | ✓           | ✗                                                                           |
-| Windows    | ✓     | ✓           | ✗                                                                           |
-| WASM/Other | ✗     | ✗           | ✗                                                                           |
+| Platform   | Zero on drop | mlock | Guard pages | Core dump exclusion                                                         | Notes                               |
+| ---------- | ------------ | ----- | ----------- | --------------------------------------------------------------------------- | ----------------------------------- |
+| Linux      | ✓            | ✓     | ✓           | ✓ ([`MADV_DONTDUMP`](https://man7.org/linux/man-pages/man2/madvise.2.html)) |                                     |
+| Android    | ✓            | ✓\*   | ✓           | ✓ (`MADV_DONTDUMP`)                                                         | \*`RLIMIT_MEMLOCK` ≈ 64 KB on stock |
+| macOS      | ✓            | ✓     | ✓           | ✗                                                                           |                                     |
+| Windows    | ✓            | ✓     | ✓           | ✗                                                                           |                                     |
+| WASM/Other | ✓            | ✗     | ✗           | ✗                                                                           |                                     |
 
-On unsupported platforms, `shrouded` falls back to standard allocation with
-zeroization on drop.
+**Android notes:** Android uses the Linux kernel, so all primitives work. The
+main constraint is `RLIMIT_MEMLOCK`, which is typically 64 KB on stock devices.
+`mlock` will succeed for small secrets (keys, passwords) but fail once the limit
+is reached. The `BestEffort` policy handles this gracefully, only reporting when
+`mlock` fails in debug builds. Notably on Android, because
+[`mlock` prevents paging to swap](https://man7.org/linux/man-pages/man2/mlock.2.html)
+and Android's compressed RAM
+([zRAM](https://docs.kernel.org/admin-guide/blockdev/zram.html)) is implemented
+as a swap device, mlocked pages cannot be compressed.
 
 ## Comparison with similar crates
 

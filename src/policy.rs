@@ -8,7 +8,9 @@ pub enum Policy {
     /// This is the recommended default for most applications. Memory will be
     /// protected when possible, but the application will continue to function
     /// even if mlock or guard pages are unavailable (e.g., due to resource
-    /// limits or platform restrictions).
+    /// limits or platform restrictions). On Android, `RLIMIT_MEMLOCK` is
+    /// typically 64 KB, so mlock will fail once that budget is exhausted.
+    /// In debug builds, a diagnostic is printed when mlock fails.
     #[default]
     BestEffort,
 

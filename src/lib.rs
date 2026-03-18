@@ -18,7 +18,7 @@
 //! `shrouded` provides types for storing secrets in protected memory that is:
 //! - **Locked to RAM** (mlock/VirtualLock) to prevent swapping to disk
 //! - **Guard-paged** to catch buffer overflows/underflows
-//! - **Excluded from core dumps** (MADV_DONTDUMP on Linux)
+//! - **Excluded from core dumps** (MADV_DONTDUMP on Linux/Android)
 //! - **Automatically zeroized** on drop using volatile writes
 //!
 //! ## Quick Start
