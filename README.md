@@ -10,12 +10,12 @@
 — Adrian Tchaikovsky,
 [Shroud](<https://en.wikipedia.org/wiki/Shroud_(Tchaikovsky_novel)>)
 
-`shrouded` provides secure memory management for the paranoid. Built with
-`mlock`, guard pages, automatic zeroization, and a healthy dose of humility.
+Secure memory management for the paranoid. Built with `mlock`, guard pages,
+automatic zeroization, and a healthy dose of humility.
 
 ## Overview
 
-`shrouded` provides types for storing secrets in protected memory that is:
+Types and utilities for storing secrets in protected memory that is:
 
 - **Locked to RAM** (`mlock`/`VirtualLock`) to prevent swapping to disk.
   - _Why?_ See the
@@ -81,7 +81,7 @@ let nonce: ShroudedArray<12> = ShroudedArray::new_with(|buf| {
 
 ## Threat model
 
-### What shrouded aims to protect against
+### What this library aims to protect against
 
 - **Swap attacks**: Secrets locked to RAM cannot be swapped to disk
 - **Core dump leaks**: Secrets excluded from core dumps on Linux
@@ -92,30 +92,13 @@ let nonce: ShroudedArray<12> = ShroudedArray::new_with(|buf| {
 - **Accidental logging**: Debug output shows `[REDACTED]`
 - **Accidental serialization**: No `Serialize` impl (only `Deserialize`)
 
-### What shrouded does NOT protect against
+### What this library does NOT protect against
 
 - **Root access**: A privileged attacker can read process memory directly
 - **Memory snapshots**: VM snapshots or hibernation may capture secrets
 - **Side channels**: Timing attacks, speculative execution, etc.
 - **Heap remnants**: For heap types like `Vec`, consider using `ShroudedBytes`
   directly
-
-## Performance
-
-`shrouded` prioritizes security over performance. Each allocation uses `mmap`
-(not `malloc`) to obtain page-aligned memory for guard pages, making allocation
-significantly slower than a normal heap allocation. With guard pages enabled, a
-single-byte secret occupies at least 3 memory pages (~12KB on most systems).
-
-This also affects `mlock` budgets. The kernel limits locked memory per process
-([`RLIMIT_MEMLOCK`](https://www.rdocumentation.org/packages/RAppArmor/versions/0.8.3/topics/rlimit_memlock),
-often 64–256KB by default), and guard pages inflate each allocation's footprint.
-`expose_guarded()` adds two `mprotect` syscalls per access; `expose()` avoids
-this at the cost of keeping memory readable between accesses.
-
-We believe these costs are worthwhile in the typical case, handling a handful of
-API keys or passwords. If you're handling many secrets concurrently, though, or
-create them in a hot loop, the performance cost is real.
 
 ## Features
 
@@ -166,6 +149,23 @@ as a swap device, mlocked pages cannot be compressed.
 | Windows support                   | yes         | yes                | no     | yes           |
 
 Migrating from another crate? See the [migration guide](docs/migration.md).
+
+## Performance
+
+`shrouded` prioritizes security over performance. Each allocation uses `mmap`
+(not `malloc`) to obtain page-aligned memory for guard pages, making allocation
+significantly slower than a normal heap allocation. With guard pages enabled, a
+single-byte secret occupies at least 3 memory pages (~12KB on most systems).
+
+This also affects `mlock` budgets. The kernel limits locked memory per process
+([`RLIMIT_MEMLOCK`](https://www.rdocumentation.org/packages/RAppArmor/versions/0.8.3/topics/rlimit_memlock),
+often 64–256KB by default), and guard pages inflate each allocation's footprint.
+`expose_guarded()` adds two `mprotect` syscalls per access; `expose()` avoids
+this at the cost of keeping memory readable between accesses.
+
+We believe these costs are worthwhile in the typical case, handling a handful of
+API keys or passwords. If you're handling many secrets concurrently, though, or
+create them in a hot loop, the performance cost is real.
 
 ## Usage notes
 
