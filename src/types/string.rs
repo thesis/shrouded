@@ -6,6 +6,7 @@ use crate::policy::Policy;
 use crate::traits::{
     Expose, ExposeGuard, ExposeGuardMut, ExposeGuarded, ExposeGuardedMut, ExposeMut,
 };
+use crate::Zeroize;
 use core::fmt;
 
 /// A UTF-8 string stored in protected memory.
@@ -42,6 +43,10 @@ impl ShroudedString {
     }
 
     /// Creates a new `ShroudedString` with a specific policy.
+    ///
+    /// After copying to protected memory, the source `String` is zeroized with
+    /// [`Zeroize`], which clears the full heap allocation including any spare
+    /// capacity (not only the used length).
     pub fn new_with_policy(mut source: String, policy: Policy) -> Result<Self> {
         let len = source.len();
         let mut alloc = ProtectedAlloc::new(len, policy)?;
@@ -53,7 +58,7 @@ impl ShroudedString {
             let bytes = source.as_bytes_mut();
             alloc.write_and_zeroize_source(bytes)?;
         }
-        drop(source);
+        source.zeroize();
 
         Ok(Self { alloc, len, policy })
     }
