@@ -3,10 +3,10 @@
 use crate::alloc::ProtectedAlloc;
 use crate::error::{Result, ShroudError};
 use crate::policy::Policy;
-use crate::Zeroize;
 use crate::traits::{
     Expose, ExposeGuard, ExposeGuardMut, ExposeGuarded, ExposeGuardedMut, ExposeMut,
 };
+use crate::Zeroize;
 use core::fmt;
 
 /// A UTF-8 string stored in protected memory.
